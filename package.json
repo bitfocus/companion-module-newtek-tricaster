@@ -1,6 +1,6 @@
 {
 	"name": "newtek-tricaster",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"api_version": "1.0.0",
 	"keywords": [
 		"Switcher"
@@ -16,6 +16,7 @@
 	"author": "Jeffrey Davidsz <jeffrey.davidsz@vicreo.eu>",
 	"license": "MIT",
 	"dependencies": {
-		"jstoxml": "^1.6.11"
+		"jstoxml": "^1.6.11",
+		"xml2js": "^0.4.23"
 	}
 }

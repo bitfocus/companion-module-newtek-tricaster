@@ -15,5 +15,7 @@ module.exports = {
 		actions['take'] = {	label: 'Take'	}
 		
 		return actions
-	}
+	},
+
 }
+
