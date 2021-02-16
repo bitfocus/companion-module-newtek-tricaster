@@ -3,6 +3,7 @@ const tcp           = require('../../tcp');
 const WebSocket     = require('ws');
 const actions       = require('./actions');
 const presets       = require('./presets');
+const ping          = require('ping');
 const { executeFeedback, initFeedbacks } = require('./feedbacks');
 
 let debug;
@@ -29,9 +30,49 @@ class instance extends instance_skel {
 		this.tally = [];
 		this.tally['PGM'] = null;
 		this.tally['PVW'] = null;
-		this.tally['ME1'] = null;
+		this.shortcut_states = [];
+		this.mediaTargets = [];
+		this.meDestinations = [];
+		this.createMediaTargets();
+		this.createMeDestinations();
 	}
 	
+	createMeDestinations() {
+		for (let index = 1; index < 9; index++) {
+			this.meDestinations.push({id: `v${index}_a_row`, label: `v${index} a bus`})
+			this.meDestinations.push({id: `v${index}_b_row`, label: `v${index} b bus`})
+		}
+	}
+	/**
+	 * Creating of media targets
+	 */
+	createMediaTargets() {
+		for (let index = 1; index < 5; index++) {
+			this.mediaTargets.push({id: `ddr${index}_play`, label:`ddr${index} Play`})
+			this.mediaTargets.push({id: `ddr${index}_play_toggle`, label:`ddr${index} Play Toggle`})
+			this.mediaTargets.push({id: `ddr${index}_stop`, label:`ddr${index} Stop`})
+			this.mediaTargets.push({id: `ddr${index}_back`, label:`ddr${index} Back`})
+			this.mediaTargets.push({id: `ddr${index}_forward`, label:`ddr${index} Forward`})
+		}
+		for (let index = 1; index < 3; index++) {
+			this.mediaTargets.push({id: `gfx${index}_play`, label:`gfx${index} Play`})
+			this.mediaTargets.push({id: `gfx${index}_play_toggle`, label:`gfx${index} Play Toggle`})
+			this.mediaTargets.push({id: `gfx${index}_stop`, label:`gfx${index} Stop`})
+			this.mediaTargets.push({id: `gfx${index}_back`, label:`gfx${index} Back`})
+			this.mediaTargets.push({id: `gfx${index}_forward`, label:`gfx${index} Forward`})
+		}
+		this.mediaTargets.push({id: `stills_play`, label:`stills Play`})
+		this.mediaTargets.push({id: `stills_play_toggle`, label:`stills Play Toggle`})
+		this.mediaTargets.push({id: `stills_stop`, label:`stills Stop`})
+		this.mediaTargets.push({id: `stills_back`, label:`stills Back`})
+		this.mediaTargets.push({id: `stills_forward`, label:`stills Forward`})
+		
+		this.mediaTargets.push({id: `titles_play`, label:`titles Play`})
+		this.mediaTargets.push({id: `titles_play_toggle`, label:`titles Play Toggle`})
+		this.mediaTargets.push({id: `titles_stop`, label:`titles Stop`})
+		this.mediaTargets.push({id: `titles_back`, label:`titles Back`})
+		this.mediaTargets.push({id: `titles_forward`, label:`titles Forward`})
+	}
 	/**
 	 * The main config fields for user input like IP address
 	 */
@@ -81,19 +122,36 @@ class instance extends instance_skel {
 		this.status(this.STATUS_UNKNOWN);
 
 		this.init_variables();
-		this.init_feedbacks();
-		
-		this.init_TCP();
-		
-		// Get all initial info needed
-		this.sendGetRequest(`http://${this.config.host}/v1/version`); // Fetch mixer info
-		// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
-		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info including tally
-		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
-		
-		this.init_presets();
+		this.connections();
 	}
-		
+	
+	connections() {
+		// Settings must be made first
+		if(this.config.host !== undefined) {
+			var cfg = {
+				timeout: 4,
+			};
+			ping.sys.probe(this.config.host, (isAlive) => {
+				if(isAlive) {
+					this.init_TCP();
+					// Get all initial info needed
+					this.sendGetRequest(`http://${this.config.host}/v1/version`); // Fetch mixer info
+					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
+					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info including tally
+					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
+					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch states of players etc
+					this.init_feedbacks();
+					this.init_presets();
+					this.status(this.STATE_OK);
+				} else {
+					this.status(this.STATE_ERROR, 'No ping reply from ' + this.config.host);
+					this.log('error', "Network error: cannot reach IP address");
+				}
+			}, cfg);
+		} else {
+			this.status(this.STATE_ERROR, 'Invalid IP configured');
+		}
+	}
 	/**
 	 * Called when config has been updated
 	 * @param  {} config
@@ -109,9 +167,10 @@ class instance extends instance_skel {
 		
 		// Get all initial info needed
 		this.sendGetRequest(`http://${this.config.host}/v1/version`); // Fetch mixer info
-		// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
+		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
 		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info including tally
 		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
+		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch states of players etc
 		
 		this.init_presets();
 	}
@@ -187,54 +246,34 @@ class instance extends instance_skel {
 	}
 	
 	/**
-	 * When connection fails, try again
-	 */
-	retryConnection() {
-		// TODO
-	}
-
-	/**
 	 * Process incoming data from the websocket connection
 	 * @param  {} data
 	 */
 	processData(data) {
 		if(data['tally'] !== undefined ) { // Set PGM and PVW variable/Feedback
-			// console.log('tally info', data['tally']['column']);
-			// data['tally']['column'].forEach(element => {
-			// 	if(element['$']['on_pgm'] == 'true' ) {
-			// 		this.setVariable('pgm_source', element['$']['name']);
-			// 		this.tallyPGM = element['$']['name'];
-			// 	}
-			// 	if(element['$']['on_prev'] == 'true' ) {
-			// 		this.setVariable('pvw_source', element['$']['name']);
-			// 		this.tallyPVW = element['$']['name'];
-			// 	}
-			// });
-			// console.log('in tally process', this.tallyPVW);
-			// this.checkFeedbacks('Tally_PGM');
-			// this.checkFeedbacks('Tally_PVW');
-		}
-		if (data['product_information'] !== undefined) {
+			this.inputs.length = 0;
+			data['tally']['column'].forEach(element => {
+				this.inputs.push({'id': element['$']['index'], 'label': element['$']['name'], 'iso_label': element['$']['name']})
+				if(element['$']['on_pgm'] == 'true' ) {
+					this.setVariable('pgm_source', element['$']['name']);
+					this.tally['PGM'] = element['$']['index'];
+				}
+				if(element['$']['on_prev'] == 'true' ) {
+					this.setVariable('pvw_source', element['$']['name']);
+					this.tally['PVW'] = element['$']['index'];
+				}
+			});
+			this.checkFeedbacks('tally_PGM');
+			this.checkFeedbacks('tally_PVW');
+		} else if (data['product_information'] !== undefined) {
 			this.log('info', `Connected to: ${data['product_information']['product_name']} at ${this.config.host}`);
 			this.setVariable('product_name', data['product_information']['product_name'])
 			this.setVariable('product_version', data['product_information']['product_version'])
-		}
-		if (data['switcher_update'] !== undefined) {
-			let source_on_main = data['switcher_update']['$']['main_source'];
-			let source_on_preview = data['switcher_update']['$']['preview_source'];
-			// Create a object with inputs
+		} else if (data['switcher_update'] !== undefined) {
+			// Update list with names
 			let counter = 0;
-			this.inputs.length = 0;
 			data['switcher_update']['inputs']['physical_input'].forEach(element => {
-				this.inputs.push({ 'id': counter, 'label': element['$']['button_label'], 'iso_label': element['$']['iso_label'], 'button_label': element['$']['button_label'], 'physical_input_number': element['$']['physical_input_number'] })
-				if (source_on_main.toLowerCase() == element['$']['physical_input_number'].toLowerCase()) { 
-					this.tally['PGM'] = counter;
-					this.setVariable('pgm_source', element['$']['iso_label']);
-				}
-				if (source_on_preview.toLowerCase() == element['$']['physical_input_number'].toLowerCase()) { 
-					this.setVariable('pvw_source', element['$']['iso_label']);
-					this.tally['PVW'] = counter;
-				}
+				this.inputs[counter]['label'] = element['$']['button_label'];
 				counter++;
 			});
 			this.actions(); // Set the actions after info is retrieved
@@ -242,16 +281,29 @@ class instance extends instance_skel {
 			this.init_presets();
 			this.checkFeedbacks('tally_PGM'); // Check directly, which source is active
 			this.checkFeedbacks('tally_PVW'); // Check directly, which source is on preview
-			this.checkFeedbacks('tally_ME1'); // Check directly, which source is on ME/1
-		} 
-		if (data['macros'] !== undefined) {
+		} else if (data['macros'] !== undefined) {
 			// Fetch all macros
 			data['macros']['systemfolder']['macro'].forEach(element => {
 				this.system_macros.push({ 'id': element['$']['identifier'], 'label': element['$']['name'] })
 			});
 			this.actions(); // Reset the actions, marco's could be updated
 		} if(data['shortcut_states'] !== undefined) {
-			// console.log(data['shortcut_states']['shortcut_state']);
+			this.shortcut_states.length = 0;
+			// Filter shortcut states and wait for it to finish before processing feedback
+			let promise = new Promise((resolve, reject) =>{
+				data['shortcut_states']['shortcut_state'].forEach(element => {
+					let name = element['$']['name'];
+					// console.log('this.mediaTargets', this.mediaTargets);
+					if(name == 'ddr1_play' || name == 'ddr2_play' || name == 'ddr3_play' || name == 'ddr4_play') {
+						this.shortcut_states[name] = element['$']['value'];
+					}
+				})
+				resolve();
+			})
+	
+			promise.then(() => {
+				this.checkFeedbacks('play_media');
+			})
 		}
 	}
 	
@@ -309,14 +361,15 @@ class instance extends instance_skel {
 		});
 
 		ws.on('message', (msg) => {
-			if (msg.search('switcher') != '-1') {
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info
-			} 
 			if (msg.search('tally') != '-1') {
 				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
 			} 
+			if (msg.search('switcher') != '-1') {
+				console.log('why');
+				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info
+			} 
 			if (msg.search('shortcut_states') != '-1') {
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch initial tally info
+				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch shotcut info
 			}	else {
 				debug(msg);
 			}
@@ -344,6 +397,9 @@ class instance extends instance_skel {
 			case 'take':
 				cmd = `<shortcuts><shortcut name="main_background_take" /></shortcuts>`;
 				break;
+			case 'auto':
+				cmd = `<shortcuts><shortcut name="main_background_auto" /></shortcuts>`;
+				break;
 			case 'macros':
 				cmd = `<shortcuts><shortcut name="play_macro_byid" value="${opt.macro}" /></shortcuts>`;
 				break;
@@ -355,31 +411,12 @@ class instance extends instance_skel {
 				cmd = `<shortcuts><shortcut name="main_b_row" value="${opt.source}" /></shortcuts>`;
 				this.tallyPVW = opt.source; // Do we wait for feedback or set it directly?
 				break;
-			case 'source_v1_a_row':
-				cmd = `<shortcuts><shortcut name="v1_a_row" value="${opt.source}" /></shortcuts>`;
+			case 'source_to_v':
+				cmd = `<shortcuts><shortcut name="${opt.destination}" value="${opt.source}" /></shortcuts>`;
 				break;
-			case 'source_v2_a_row':
-				cmd = `<shortcuts><shortcut name="v2_a_row" value="${opt.source}" /></shortcuts>`;
+			case 'media_target':
+				cmd = `<shortcuts><shortcut name="${opt.target}" /></shortcuts>`;
 				break;
-			case 'source_v3_a_row':
-				cmd = `<shortcuts><shortcut name="v3_a_row" value="${opt.source}" /></shortcuts>`;
-				break;
-			case 'source_v4_a_row':
-				cmd = `<shortcuts><shortcut name="v4_a_row" value="${opt.source}" /></shortcuts>`;
-				break;
-			case 'source_v5_a_row':
-				cmd = `<shortcuts><shortcut name="v5_a_row" value="${opt.source}" /></shortcuts>`;
-				break;
-			case 'source_v6_a_row':
-				cmd = `<shortcuts><shortcut name="v6_a_row" value="${opt.source}" /></shortcuts>`;
-				break;
-			case 'source_v7_a_row':
-				cmd = `<shortcuts><shortcut name="v7_a_row" value="${opt.source}" /></shortcuts>`;
-				break;
-			case 'source_v8_a_row':
-				cmd = `<shortcuts><shortcut name="v8_a_row" value="${opt.source}" /></shortcuts>`;
-				break;
-
 			case 'custom':
 				cmd = opt.custom;
 				break;
@@ -394,7 +431,6 @@ class instance extends instance_skel {
 		}
 		this.checkFeedbacks('tally_PGM');
 		this.checkFeedbacks('tally_PVW');
-		this.checkFeedbacks('tally_ME1');
 	}
 }
 

@@ -1,3 +1,5 @@
+const { resolve } = require("app-root-path");
+
 exports.initFeedbacks = function() {
 	const feedbacks = {};
 
@@ -54,6 +56,22 @@ exports.initFeedbacks = function() {
 		]
 	};
 
+	feedbacks.play_media = {
+		label: 'Change color when player is active',
+		description: 'When source is on preview bus, background color will change',
+		options: [
+			foregroundColor,
+			backgroundColorPreview,
+			{
+				type: 'dropdown',
+				label: 'target',
+				id: 'target',
+				choices: this.mediaTargets,
+				default: 'ddr1'
+			}
+		]
+	};
+
 	return feedbacks;
 
 }
@@ -77,8 +95,8 @@ exports.executeFeedback = function (feedback, bank) {
 		}
 	}
 
-	if(feedback.type === 'tally_ME1') {
-		if(feedback.options.src == this.tally['ME1']) {
+	if(feedback.type === 'play_media') {
+		if(this.shortcut_states[feedback.options.target] == 'true') {
 			return {
 				color: feedback.options.fg,
 				bgcolor: feedback.options.bg

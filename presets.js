@@ -68,7 +68,7 @@ exports.getPresets = function () {
 		 * Source on ME/1
 		 */
 		presets.push({
-			category: 'Source on ME/1',
+			category: 'Source on V1',
 			label: element.label,
 			bank: {
 				style: 'text',
@@ -77,19 +77,10 @@ exports.getPresets = function () {
 				color: foregroundColor,
 				bgcolor: backgroundColor
 			},
-			feedbacks: [
-				{
-					type: 'tally_ME1',
-					options: {
-						bg: this.rgb(255, 255, 0),
-						fg: this.rgb(0, 0, 0),
-						src: element.id
-					},
-				},
-			],
 			actions: [{
-				action: 'source_v1_a_row',
+				action: 'source_to_v',
 				options: {
+					destination: 'v1_a_row',
 					source: element.id
 				}
 			}]

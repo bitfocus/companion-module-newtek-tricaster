@@ -15,5 +15,7 @@
 	},
 	"author": "Jeffrey Davidsz <jeffrey.davidsz@vicreo.eu>",
 	"license": "MIT",
-	"dependencies": {}
+	"dependencies": {
+		"ping": "^0.4.0"
+	}
 }
