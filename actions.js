@@ -6,15 +6,15 @@ module.exports = {
 		actions['take'] = {	label: 'Take'	}
 		actions['auto'] = {	label: 'Auto transition'	}
 
-		// actions['macros'] = {
-		// 	label: 'Run system macro',
-		// 	options: [{
-		// 		label: 'Select macro',
-		// 		type: 'dropdown',
-		// 		id: 'macro',
-		// 		choices: this.system_macros
-		// 	}]
-		// }
+		actions['macros'] = {
+			label: 'Run system macro',
+			options: [{
+				label: 'Select macro',
+				type: 'dropdown',
+				id: 'macro',
+				choices: this.system_macros
+			}]
+		}
 
 		actions['source_pvw'] = {
 			label: 'Set source to preview',

@@ -4,10 +4,28 @@
 * Instructions here about information needed to connect to the device/software.
 
 ### Available Actions
-* List
+* Take
+* Auto transition
+* Set Source to preview
+* Set Source to program
+* Set Source to V (ME)
+** a & b bus
+* Media options
+** Play/Play Toggle/Stop/Back/Forward
+* Run Macro's (under construction)
+* Custom Shortcuts
 
 ### Available Feedbacks
-* List
+* Tally feedback for sources on program and preview
+* Media feedback (under construction)
 
 ### Available Variables
-* List
+* Product name
+* Product version
+* Source on program
+* Source on preview
+
+### Available Presets
+* Sources to PGM
+* Sources to PVW
+* Sources to V1

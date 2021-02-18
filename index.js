@@ -4,6 +4,8 @@ const WebSocket     = require('ws');
 const actions       = require('./actions');
 const presets       = require('./presets');
 const ping          = require('ping');
+const parseString   = require("xml2js").parseString;
+const util          = require("util");
 const { executeFeedback, initFeedbacks } = require('./feedbacks');
 
 let debug;
@@ -28,8 +30,8 @@ class instance extends instance_skel {
 		this.inputs = [];
 		this.system_macros = [];
 		this.tally = [];
-		this.tally['PGM'] = null;
-		this.tally['PVW'] = null;
+		this.tallyPGM = [];
+		this.tallyPVW = [];
 		this.shortcut_states = [];
 		this.mediaTargets = [];
 		this.meDestinations = [];
@@ -103,6 +105,10 @@ class instance extends instance_skel {
 		this.setActions(this.getActions());
 	}
 
+	sort(array) {
+		array((a, b) => b - a);
+	}
+
 	/**
 	 * Handle stuff when modules gets destroyed
 	 */
@@ -133,13 +139,13 @@ class instance extends instance_skel {
 			};
 			ping.sys.probe(this.config.host, (isAlive) => {
 				if(isAlive) {
-					this.init_TCP();
 					// Get all initial info needed
 					this.sendGetRequest(`http://${this.config.host}/v1/version`); // Fetch mixer info
-					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
-					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info including tally
+					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial input info
 					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
-					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch states of players etc
+					this.init_TCP();
+					// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info including tally
+					// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch states of players etc
 					this.init_feedbacks();
 					this.init_presets();
 					this.status(this.STATE_OK);
@@ -163,14 +169,15 @@ class instance extends instance_skel {
 		this.init_variables();
 		this.init_feedbacks();
 		
-		this.init_TCP();
 		
 		// Get all initial info needed
 		this.sendGetRequest(`http://${this.config.host}/v1/version`); // Fetch mixer info
-		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
-		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info including tally
+		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial input info
 		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
-		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch states of players etc
+
+		this.init_TCP();
+		// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info including tally
+		// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch states of players etc
 		
 		this.init_presets();
 	}
@@ -180,6 +187,7 @@ class instance extends instance_skel {
 	*/
 	init_TCP () {
 		this.config.port = 5951; // Fixed port
+		this.inputBuffer = Buffer.from("");
 
 		if (this.config.host !== undefined) {
 			if (this.socket !== undefined) {
@@ -203,12 +211,93 @@ class instance extends instance_skel {
 
 				this.socket.on('connect', () => {
 					this.status(this.STATE_OK);
+					// Ask the mixer to give us variable (register/state) updates on connect
+					this.socket.send(`<register name="NTK_states"/>\n`);
+
 					debug("TriCaster shortcut socket Opened");
-					this.init_websocket_listener();
-				})
+					// this.init_websocket_listener();
+				});
+
+				this.socket.on('data', (inputData) => {
+					clearTimeout(this.errorTimer);
+
+					this.inputBuffer = Buffer.concat([this.inputBuffer, inputData]);
+		
+					parseString(
+						Buffer.from("<root>" + this.inputBuffer.toString() + "</root>"),
+						(err, result) => {
+							if (!err) {
+								this.inputBuffer = Buffer.from("");
+								this.incomingData(result.root);
+							} else {
+								this.errorTimer = setTimeout(() => {
+									throw "Timeout getting a complete xml packet";
+								}, 500);
+							}
+						}
+					);
+				});
 			}
 		}
 	}
+	
+	/**
+	 * @param  {} states
+	 */
+	shortcutStatesIngest(states) {
+		states.forEach(element => {
+			if(element['$']['name'] == 'preview_tally') {
+				this.tallyPVW.length = [];
+				this.setVariable('pvw_source', element['$']['value'].toLowerCase().split("|"));
+				element['$']['value'].toLowerCase().split("|").forEach(element2 => {
+					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
+					this.tallyPVW[this.inputs[index].id] = true;
+				});
+			} else if(element['$']['name'] == 'program_tally') {
+				this.setVariable('pgm_source', element['$']['value'].toLowerCase().split("|"));
+				this.tallyPGM.length = [];
+				element['$']['value'].toLowerCase().split("|").forEach(element2 => {
+					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
+					this.tallyPGM[this.inputs[index].id] = true;
+				});
+			} else if(element['$']['name'].match(/_short_name/)){
+				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11));
+				if(index != -1) {
+					this.inputs[index].short_name = element['$']['value'];
+				} 
+			} else if(element['$']['name'].match(/_long_name/)){
+				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -10) );
+				if(index != -1) {
+					this.inputs[index].long_name = element['$']['value'];
+					this.inputs[index].label = element['$']['value'];
+				} 
+			}
+		});
+
+	}
+	/**
+	 * @param  {} data
+	 */
+	incomingData(data) {
+    if (data.shortcut_states !== undefined) {
+      if (Array.isArray(data.shortcut_states)) {
+        data.shortcut_states.forEach((states) =>
+          this.shortcutStatesIngest(states.shortcut_state)
+        );
+      } else {
+        this.shortcutStatesIngest(data.shortcut_states.shortcut_state);
+      }
+			this.actions();
+			this.init_presets();
+			this.checkFeedbacks('tally_PGM');
+			this.checkFeedbacks('tally_PVW');
+    } else {
+      console.log(
+        "UNKNOWN INCOMING DATA",
+        util.inspect(data, false, null, true)
+      );
+    }
+  }
 
 	/**
 	 * Initialize presets
@@ -251,20 +340,12 @@ class instance extends instance_skel {
 	 */
 	processData(data) {
 		if(data['tally'] !== undefined ) { // Set PGM and PVW variable/Feedback
-			this.inputs.length = 0;
-			data['tally']['column'].forEach(element => {
-				this.inputs.push({'id': element['$']['index'], 'label': element['$']['name'], 'iso_label': element['$']['name']})
-				if(element['$']['on_pgm'] == 'true' ) {
-					this.setVariable('pgm_source', element['$']['name']);
-					this.tally['PGM'] = element['$']['index'];
-				}
-				if(element['$']['on_prev'] == 'true' ) {
-					this.setVariable('pvw_source', element['$']['name']);
-					this.tally['PVW'] = element['$']['index'];
-				}
-			});
-			this.checkFeedbacks('tally_PGM');
-			this.checkFeedbacks('tally_PVW');
+			if (this.inputs.length == 0) {
+				console.log('Load initial Data');
+				data['tally']['column'].forEach(element => {
+					this.inputs.push({'id': element['$']['index'], 'label': element['$']['name'], 'name': element['$']['name'], 'long_name': element['$']['name'], 'short_name': element['$']['name'] })
+				});
+			}
 		} else if (data['product_information'] !== undefined) {
 			this.log('info', `Connected to: ${data['product_information']['product_name']} at ${this.config.host}`);
 			this.setVariable('product_name', data['product_information']['product_name'])
@@ -288,12 +369,11 @@ class instance extends instance_skel {
 			});
 			this.actions(); // Reset the actions, marco's could be updated
 		} if(data['shortcut_states'] !== undefined) {
-			this.shortcut_states.length = 0;
+			this.shortcut_states.length = [];
 			// Filter shortcut states and wait for it to finish before processing feedback
 			let promise = new Promise((resolve, reject) =>{
 				data['shortcut_states']['shortcut_state'].forEach(element => {
 					let name = element['$']['name'];
-					// console.log('this.mediaTargets', this.mediaTargets);
 					if(name == 'ddr1_play' || name == 'ddr2_play' || name == 'ddr3_play' || name == 'ddr4_play') {
 						this.shortcut_states[name] = element['$']['value'];
 					}
@@ -365,7 +445,6 @@ class instance extends instance_skel {
 				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
 			} 
 			if (msg.search('switcher') != '-1') {
-				console.log('why');
 				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info
 			} 
 			if (msg.search('shortcut_states') != '-1') {
