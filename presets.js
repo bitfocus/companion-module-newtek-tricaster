@@ -2,7 +2,98 @@ exports.getPresets = function () {
 	let presets = []
 	const foregroundColor = this.rgb(255, 255, 255)
 	const backgroundColor = this.rgb(0, 0, 0)
-	// create presets for all buttons
+		
+	/** 
+	 * Take
+	 */
+	presets.push({
+		category: 'Basic',
+		label: 'TAKE',
+		bank: {
+			style: 'text',
+			text: 'TAKE',
+			size: '14',
+			color: foregroundColor,
+			bgcolor: this.rgb(255,0,0)
+		},
+		actions: [{
+			action: 'take'
+		}]
+	})
+	/** 
+	 * Auto
+	 */
+	presets.push({
+		category: 'Basic',
+		label: 'AUTO',
+		bank: {
+			style: 'text',
+			text: 'AUTO',
+			size: '14',
+			color: foregroundColor,
+			bgcolor: this.rgb(255,0,0)
+		},
+		actions: [{
+			action: 'auto'
+		}]
+	})
+	/** 
+	 * Record
+	 */
+	presets.push({
+		category: 'Basic',
+		label: 'REC',
+		bank: {
+			style: 'text',
+			text: 'REC',
+			size: '14',
+			color: foregroundColor,
+			bgcolor: backgroundColor
+		},
+		feedbacks: [
+			{
+				type: 'tally_record',
+				options: {
+					bg: this.rgb(255, 0, 0),
+					fg: this.rgb(255, 255, 255),
+				},
+			},
+		],
+		actions: [{
+			action: 'record_start'
+		}],
+		release_actions: [{
+			action: 'record_stop'
+		}]
+	})
+	/** 
+	 * Stream
+	 */
+	presets.push({
+		category: 'Basic',
+		label: 'STREAM',
+		bank: {
+			style: 'text',
+			text: 'Stream Toggle',
+			size: '14',
+			color: foregroundColor,
+			bgcolor: backgroundColor
+		},
+		feedbacks: [
+			{
+				type: 'tally_streaming',
+				options: {
+					bg: this.rgb(255, 0, 0),
+					fg: this.rgb(255, 255, 255),
+				},
+			},
+		],
+		actions: [{
+			action: 'streaming_toggle'
+		}]
+	})
+
+	// create presets for all inputs
 	this.inputs.forEach(element => {
 		/** 
 		 * Source on PGM
@@ -87,6 +178,7 @@ exports.getPresets = function () {
 		})
 	});
 	
+
 
 	return presets
 }

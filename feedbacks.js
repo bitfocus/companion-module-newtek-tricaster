@@ -56,9 +56,27 @@ exports.initFeedbacks = function() {
 		]
 	};
 
+	feedbacks.tally_record = {
+		label: 'Change color when recording',
+		description: 'When recording, background color will change',
+		options: [
+			foregroundColor,
+			backgroundColorProgram
+		]
+	};
+	
+	feedbacks.tally_streaming = {
+		label: 'Change color when streaming',
+		description: 'When streaming, background color will change',
+		options: [
+			foregroundColor,
+			backgroundColorProgram
+		]
+	};
+
 	feedbacks.play_media = {
 		label: 'Change color when player is active',
-		description: 'When source is on preview bus, background color will change',
+		description: 'When media state is on play, background color will change',
 		options: [
 			foregroundColor,
 			backgroundColorPreview,
@@ -88,6 +106,24 @@ exports.executeFeedback = function (feedback, bank) {
 
 	if(feedback.type === 'tally_PVW') {
 		if(this.tallyPVW[feedback.options.src]) {
+			return {
+				color: feedback.options.fg,
+				bgcolor: feedback.options.bg
+			};
+		}
+	}
+
+	if(feedback.type === 'tally_record') {
+		if(this.switcher['recording']) {
+			return {
+				color: feedback.options.fg,
+				bgcolor: feedback.options.bg
+			};
+		}
+	}
+	
+	if(feedback.type === 'tally_streaming') {
+		if(this.switcher['streaming']) {
 			return {
 				color: feedback.options.fg,
 				bgcolor: feedback.options.bg

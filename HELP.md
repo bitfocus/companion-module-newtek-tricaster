@@ -13,11 +13,15 @@
 * Media options
 ** Play/Play Toggle/Stop/Back/Forward
 * Run Macro's (under construction)
+* Record start/stop
+* Streaming Toggle
 * Custom Shortcuts
 
 ### Available Feedbacks
 * Tally feedback for sources on program and preview
 * Media feedback (under construction)
+* Record
+* Stream
 
 ### Available Variables
 * Product name
@@ -29,3 +33,7 @@
 * Sources to PGM
 * Sources to PVW
 * Sources to V1
+* Take
+* Auto
+* Record toggle
+* Streaming

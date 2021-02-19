@@ -5,16 +5,19 @@ module.exports = {
 
 		actions['take'] = {	label: 'Take'	}
 		actions['auto'] = {	label: 'Auto transition'	}
+		actions['record_start'] = {	label: 'Record Start'	}
+		actions['record_stop'] = {	label: 'Record Stop'	}
+		actions['streaming_toggle'] = {	label: 'Toggle Streaming'	}
 
-		actions['macros'] = {
-			label: 'Run system macro',
-			options: [{
-				label: 'Select macro',
-				type: 'dropdown',
-				id: 'macro',
-				choices: this.system_macros
-			}]
-		}
+		// actions['macros'] = {
+		// 	label: 'Run system macro',
+		// 	options: [{
+		// 		label: 'Select macro',
+		// 		type: 'dropdown',
+		// 		id: 'macro',
+		// 		choices: this.system_macros
+		// 	}]
+		// }
 
 		actions['source_pvw'] = {
 			label: 'Set source to preview',
@@ -54,6 +57,18 @@ module.exports = {
 				default: 0
 			}]
 		}
+
+		// actions['tbar'] = {
+		// 	label: 'Set t-bar to position',
+		// 	options: [{
+		// 		label: 'Position',
+		// 		type: 'number',
+		// 		id: 'position',
+		// 		min: 0,
+		// 		max: 255,
+		// 		default: 0
+		// 	}]
+		// }
 	
 		actions['media_target'] = {
 			label: 'Media options',

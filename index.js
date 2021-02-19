@@ -27,6 +27,7 @@ class instance extends instance_skel {
 			...presets
 		})
 
+		this.switcher = [];
 		this.inputs = [];
 		this.system_macros = [];
 		this.tally = [];
@@ -253,6 +254,7 @@ class instance extends instance_skel {
 					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
 					this.tallyPVW[this.inputs[index].id] = true;
 				});
+				this.checkFeedbacks['Tally_PVW']
 			} else if(element['$']['name'] == 'program_tally') {
 				this.setVariable('pgm_source', element['$']['value'].toLowerCase().split("|"));
 				this.tallyPGM.length = [];
@@ -260,17 +262,29 @@ class instance extends instance_skel {
 					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
 					this.tallyPGM[this.inputs[index].id] = true;
 				});
-			} else if(element['$']['name'].match(/_short_name/)){
+				this.checkFeedbacks['Tally_PGM']
+			} else if(element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11));
 				if(index != -1) {
 					this.inputs[index].short_name = element['$']['value'];
 				} 
-			} else if(element['$']['name'].match(/_long_name/)){
+			} else if(element['$']['name'].match(/_long_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -10) );
 				if(index != -1) {
 					this.inputs[index].long_name = element['$']['value'];
 					this.inputs[index].label = element['$']['value'];
 				} 
+			} else if(element['$']['name'].match(/record_toggle/)) {
+				this.switcher['recording'] = element['$']['value'] == '1' ? true : false;
+				this.setVariable('recording', element['$']['value'] == '1' ? true : false);
+				this.checkFeedbacks['tally_record'];
+			} else if(element['$']['name'].match(/streaming_toggle/)) {
+				this.switcher['streaming'] = element['$']['value'] == '1' ? true : false;
+				this.setVariable('streaming', element['$']['value'] == '1' ? true : false);
+				this.checkFeedbacks['tally_streaming'];
+			} else if(element['$']['name'].match(/ddr1_play/) || element['$']['name'].match(/ddr2_play/) || element['$']['name'].match(/ddr3_play/) || element['$']['name'].match(/ddr4_play/)) {
+				this.shortcut_states[element['$']['name']] == element['$']['value'];
+				this.checkFeedbacks['play_media'];
 			}
 		});
 
@@ -289,8 +303,6 @@ class instance extends instance_skel {
       }
 			this.actions();
 			this.init_presets();
-			this.checkFeedbacks('tally_PGM');
-			this.checkFeedbacks('tally_PVW');
     } else {
       console.log(
         "UNKNOWN INCOMING DATA",
@@ -348,6 +360,9 @@ class instance extends instance_skel {
 			}
 		} else if (data['product_information'] !== undefined) {
 			this.log('info', `Connected to: ${data['product_information']['product_name']} at ${this.config.host}`);
+			this.switcher['product_name'] = data['product_information']['product_name'];
+			this.switcher['product_version'] = data['product_information']['product_version'];
+
 			this.setVariable('product_name', data['product_information']['product_name'])
 			this.setVariable('product_version', data['product_information']['product_version'])
 		} else if (data['switcher_update'] !== undefined) {
@@ -369,21 +384,21 @@ class instance extends instance_skel {
 			});
 			this.actions(); // Reset the actions, marco's could be updated
 		} if(data['shortcut_states'] !== undefined) {
-			this.shortcut_states.length = [];
-			// Filter shortcut states and wait for it to finish before processing feedback
-			let promise = new Promise((resolve, reject) =>{
-				data['shortcut_states']['shortcut_state'].forEach(element => {
-					let name = element['$']['name'];
-					if(name == 'ddr1_play' || name == 'ddr2_play' || name == 'ddr3_play' || name == 'ddr4_play') {
-						this.shortcut_states[name] = element['$']['value'];
-					}
-				})
-				resolve();
-			})
+			// this.shortcut_states.length = [];
+			// // Filter shortcut states and wait for it to finish before processing feedback
+			// let promise = new Promise((resolve, reject) =>{
+			// 	data['shortcut_states']['shortcut_state'].forEach(element => {
+			// 		let name = element['$']['name'];
+			// 		if(name == 'ddr1_play' || name == 'ddr2_play' || name == 'ddr3_play' || name == 'ddr4_play') {
+			// 			this.shortcut_states[name] = element['$']['value'];
+			// 		}
+			// 	})
+			// 	resolve();
+			// })
 	
-			promise.then(() => {
-				this.checkFeedbacks('play_media');
-			})
+			// promise.then(() => {
+			// 	this.checkFeedbacks('play_media');
+			// })
 		}
 	}
 	
@@ -396,6 +411,8 @@ class instance extends instance_skel {
 			{ name: 'product_version', label: 'Product version' },
 			{ name: 'pgm_source', label: 'Source on Program' },
 			{ name: 'pvw_source', label: 'Source on Preview' },
+			{ name: 'recording', label: 'Recording' },
+			{ name: 'streaming', label: 'Streaming' },
 		]
 		this.setVariableDefinitions(variables)
 	}
@@ -495,6 +512,15 @@ class instance extends instance_skel {
 				break;
 			case 'media_target':
 				cmd = `<shortcuts><shortcut name="${opt.target}" /></shortcuts>`;
+				break;
+			case 'record_start':
+				cmd = `<shortcuts><shortcut name="record_start" /></shortcuts>`;
+				break;
+			case 'record_stop':
+				cmd = `<shortcuts><shortcut name="record_stop" /></shortcuts>`;
+				break;
+			case 'tbar':
+				cmd = `<shortcuts><shortcut name="main_value" /></shortcuts>`;
 				break;
 			case 'custom':
 				cmd = opt.custom;
