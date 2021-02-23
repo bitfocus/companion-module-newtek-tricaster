@@ -9,6 +9,7 @@
 * Set Source to preview
 * Set Source to program
 * Set Source to V (ME)
+* Set Source to DSK per ME
 ** a & b bus
 * Media options
 ** Play/Play Toggle/Stop/Back/Forward

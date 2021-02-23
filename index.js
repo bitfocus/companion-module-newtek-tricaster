@@ -36,14 +36,25 @@ class instance extends instance_skel {
 		this.shortcut_states = [];
 		this.mediaTargets = [];
 		this.meDestinations = [];
+		this.dskDestinations = [];
+		this.createDskDestinations();
 		this.createMediaTargets();
 		this.createMeDestinations();
 	}
 	
 	createMeDestinations() {
 		for (let index = 1; index < 9; index++) {
-			this.meDestinations.push({id: `v${index}_a_row`, label: `v${index} a bus`})
-			this.meDestinations.push({id: `v${index}_b_row`, label: `v${index} b bus`})
+			this.meDestinations.push({id: `v${index}_a_row`, label: `v${index} a bus`});
+			this.meDestinations.push({id: `v${index}_b_row`, label: `v${index} b bus`});
+			for (let dsk = 1; dsk < 5; dsk++) {
+				this.dskDestinations.push({id: `v${index}_dsk${dsk}`, label: `v${index} dsk ${dsk}`});
+			}
+		}
+	}
+	
+	createDskDestinations() {
+		for (let dsk = 1; dsk < 5; dsk++) {
+			this.dskDestinations.push({id: `main_dsk${dsk}`, label: `main dsk ${dsk}`});
 		}
 	}
 	/**
@@ -295,7 +306,6 @@ class instance extends instance_skel {
 				this.checkFeedbacks['play_media'];
 			}
 		});
-		console.log('ME',this.meDestinations);
 	}
 	/**
 	 * @param  {} data
@@ -517,6 +527,9 @@ class instance extends instance_skel {
 				break;
 			case 'source_to_v':
 				cmd = `<shortcuts><shortcut name="${opt.destination}" value="${opt.source}" /></shortcuts>`;
+				break;
+			case 'source_to_dsk':
+				cmd = `<shortcuts><shortcut name="${opt.dsk}_select" value="${opt.source}" /></shortcuts>`;
 				break;
 			case 'media_target':
 				cmd = `<shortcuts><shortcut name="${opt.target}" /></shortcuts>`;

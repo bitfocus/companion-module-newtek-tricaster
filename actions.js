@@ -57,6 +57,23 @@ module.exports = {
 				default: 0
 			}]
 		}
+		
+		actions['source_to_dsk'] = {
+			label: 'Set source to dsk',
+			options: [{
+				label: 'Destination',
+				type: 'dropdown',
+				id: 'destination',
+				choices: this.dskDestinations,
+				default: 'v1_dsk1'
+			},{
+				label: 'Sources',
+				type: 'dropdown',
+				id: 'source',
+				choices: this.inputs,
+				default: 0
+			}]
+		}
 
 		// actions['tbar'] = {
 		// 	label: 'Set t-bar to position',
