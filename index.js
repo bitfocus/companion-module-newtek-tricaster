@@ -268,6 +268,14 @@ class instance extends instance_skel {
 				if(index != -1) {
 					this.inputs[index].short_name = element['$']['value'];
 				} 
+				const va_index = this.meDestinations.findIndex((el) => el.label.slice(0, -6) == element['$']['name'].slice(0, -11));
+				if(va_index != -1) {
+					this.meDestinations[va_index].label = element['$']['value'] + " a bus";
+				} 
+				const vb_index = this.meDestinations.findIndex((el) => el.label.slice(0, -6) == element['$']['name'].slice(0, -11));
+				if(vb_index != -1) {
+					this.meDestinations[vb_index].label = element['$']['value'] + " b bus";
+				} 
 			} else if(element['$']['name'].match(/_long_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -10) );
 				if(index != -1) {
@@ -287,7 +295,7 @@ class instance extends instance_skel {
 				this.checkFeedbacks['play_media'];
 			}
 		});
-
+		console.log('ME',this.meDestinations);
 	}
 	/**
 	 * @param  {} data
