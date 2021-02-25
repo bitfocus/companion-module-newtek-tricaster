@@ -16,6 +16,7 @@
 * Run Macro's (under construction)
 * Record start/stop
 * Streaming Toggle
+* Set a datalink key/value
 * Custom Shortcuts
 
 ### Available Feedbacks

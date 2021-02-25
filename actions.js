@@ -98,6 +98,21 @@ module.exports = {
 			}]
 		}
 
+		actions['datalink'] = {
+			label: 'Set datalink key value',
+			options: [{
+				label: 'Datalink Key',
+				type: 'textinput',
+				id: 'datalink_key',
+				width: 6
+			},{
+				label: 'Datalink Value',
+				type: 'textinput',
+				id: 'datalink_value',
+				width: 6
+			}]
+		}
+
 		actions['custom'] = {
 			label: 'Custom shortcut',
 			options: [{

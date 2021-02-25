@@ -4,8 +4,8 @@ const WebSocket     = require('ws');
 const actions       = require('./actions');
 const presets       = require('./presets');
 const ping          = require('ping');
-const parseString   = require("xml2js").parseString;
-const util          = require("util");
+const parseString   = require('xml2js').parseString;
+const util          = require('util');
 const { executeFeedback, initFeedbacks } = require('./feedbacks');
 
 let debug;
@@ -313,8 +313,9 @@ class instance extends instance_skel {
 	incomingData(data) {
     if (data.shortcut_states !== undefined) {
       if (Array.isArray(data.shortcut_states)) {
-        data.shortcut_states.forEach((states) =>
-          this.shortcutStatesIngest(states.shortcut_state)
+        data.shortcut_states.forEach((states) => {
+					this.shortcutStatesIngest(states.shortcut_state);
+					}
         );
       } else {
         this.shortcutStatesIngest(data.shortcut_states.shortcut_state);
@@ -398,25 +399,11 @@ class instance extends instance_skel {
 		} else if (data['macros'] !== undefined) {
 			// Fetch all macros
 			data['macros']['systemfolder']['macro'].forEach(element => {
-				this.system_macros.push({ 'id': element['$']['identifier'], 'label': element['$']['name'] })
+				this.system_macros.push({ 'id': element['$']['name'], 'label': element['$']['name'] })
 			});
 			this.actions(); // Reset the actions, marco's could be updated
 		} if(data['shortcut_states'] !== undefined) {
-			// this.shortcut_states.length = [];
-			// // Filter shortcut states and wait for it to finish before processing feedback
-			// let promise = new Promise((resolve, reject) =>{
-			// 	data['shortcut_states']['shortcut_state'].forEach(element => {
-			// 		let name = element['$']['name'];
-			// 		if(name == 'ddr1_play' || name == 'ddr2_play' || name == 'ddr3_play' || name == 'ddr4_play') {
-			// 			this.shortcut_states[name] = element['$']['value'];
-			// 		}
-			// 	})
-			// 	resolve();
-			// })
-	
-			// promise.then(() => {
-			// 	this.checkFeedbacks('play_media');
-			// })
+			// Handled by TCP states
 		}
 	}
 	
@@ -477,13 +464,13 @@ class instance extends instance_skel {
 
 		ws.on('message', (msg) => {
 			if (msg.search('tally') != '-1') {
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
+				// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
 			} 
 			if (msg.search('switcher') != '-1') {
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info
+				// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info
 			} 
 			if (msg.search('shortcut_states') != '-1') {
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch shotcut info
+				// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch shotcut info
 			}	else {
 				debug(msg);
 			}
@@ -515,7 +502,7 @@ class instance extends instance_skel {
 				cmd = `<shortcuts><shortcut name="main_background_auto" /></shortcuts>`;
 				break;
 			case 'macros':
-				cmd = `<shortcuts><shortcut name="play_macro_byid" value="${opt.macro}" /></shortcuts>`;
+				cmd = `<shortcuts><shortcut name="play_macro_byname"><entry key="name" value="${opt.macro}" /></shortcut></shortcuts>`;
 				break;
 			case 'source_pgm':
 				cmd = `<shortcuts><shortcut name="main_a_row" value="${opt.source}" /></shortcuts>`;
@@ -542,6 +529,9 @@ class instance extends instance_skel {
 				break;
 			case 'tbar':
 				cmd = `<shortcuts><shortcut name="main_value" /></shortcuts>`;
+				break;
+			case 'datalink':
+				cmd = `<shortcuts><shortcut name="set_datalink"><entry key="datalink_key" value="${opt.datalink_key}" /><entry key="datalink_value" value="${opt.datalink_value}"/></shortcut></shortcuts>`
 				break;
 			case 'custom':
 				cmd = opt.custom;
