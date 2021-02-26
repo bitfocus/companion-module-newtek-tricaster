@@ -96,7 +96,7 @@ exports.initFeedbacks = function() {
 
 exports.executeFeedback = function (feedback, bank) {
 	if(feedback.type === 'tally_PGM') {
-		if(this.tallyPGM[feedback.options.src]) {
+		if(this.tallyPGM[feedback.options.src] == 'true') {
 			return {
 				color: feedback.options.fg,
 				bgcolor: feedback.options.bg
@@ -105,7 +105,7 @@ exports.executeFeedback = function (feedback, bank) {
 	}
 
 	if(feedback.type === 'tally_PVW') {
-		if(this.tallyPVW[feedback.options.src]) {
+		if(this.tallyPVW[feedback.options.src] == 'true') {
 			return {
 				color: feedback.options.fg,
 				bgcolor: feedback.options.bg

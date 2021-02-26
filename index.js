@@ -11,6 +11,8 @@ const { executeFeedback, initFeedbacks } = require('./feedbacks');
 let debug;
 let log;
 
+
+
 class instance extends instance_skel {
 	/**
 	 * Main constructor
@@ -31,8 +33,8 @@ class instance extends instance_skel {
 		this.inputs = [];
 		this.system_macros = [];
 		this.tally = [];
-		this.tallyPGM = [];
 		this.tallyPVW = [];
+		this.tallyPGM = [];
 		this.shortcut_states = [];
 		this.mediaTargets = [];
 		this.meDestinations = [];
@@ -186,6 +188,7 @@ class instance extends instance_skel {
 		this.sendGetRequest(`http://${this.config.host}/v1/version`); // Fetch mixer info
 		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial input info
 		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
+		// this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalinks
 
 		this.init_TCP();
 		// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info including tally
@@ -259,21 +262,19 @@ class instance extends instance_skel {
 	shortcutStatesIngest(states) {
 		states.forEach(element => {
 			if(element['$']['name'] == 'preview_tally') {
-				this.tallyPVW.length = [];
+				this.tallyPVW = [];
 				this.setVariable('pvw_source', element['$']['value'].toLowerCase().split("|"));
 				element['$']['value'].toLowerCase().split("|").forEach(element2 => {
 					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
-					this.tallyPVW[this.inputs[index].id] = true;
+					this.tallyPVW[this.inputs[index].id] = 'true';
 				});
-				this.checkFeedbacks['Tally_PVW']
 			} else if(element['$']['name'] == 'program_tally') {
+				this.tallyPGM = [];
 				this.setVariable('pgm_source', element['$']['value'].toLowerCase().split("|"));
-				this.tallyPGM.length = [];
 				element['$']['value'].toLowerCase().split("|").forEach(element2 => {
 					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
-					this.tallyPGM[this.inputs[index].id] = true;
+					this.tallyPGM[this.inputs[index].id] = 'true';
 				});
-				this.checkFeedbacks['Tally_PGM']
 			} else if(element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11));
 				if(index != -1) {
@@ -306,6 +307,9 @@ class instance extends instance_skel {
 				this.checkFeedbacks['play_media'];
 			}
 		});
+		this.checkFeedbacks('tally_PVW');
+		this.checkFeedbacks('tally_PGM');
+
 	}
 	/**
 	 * @param  {} data
@@ -375,8 +379,13 @@ class instance extends instance_skel {
 				console.log('Load initial Data');
 				data['tally']['column'].forEach(element => {
 					this.inputs.push({'id': element['$']['index'], 'label': element['$']['name'], 'name': element['$']['name'], 'long_name': element['$']['name'], 'short_name': element['$']['name'] })
+					element['$']['on_prev'] == 'true' ? this.tallyPVW[element['$']['index']] = 'true' : this.tallyPVW[element['$']['index']] = 'false';
+					element['$']['on_pgm'] == 'true' ? this.tallyPGM[element['$']['index']] = 'true' : this.tallyPGM[element['$']['index']] = 'false;'
 				});
 			}
+			this.init_feedbacks(); // Same for feedback as it holds the inputs
+			this.checkFeedbacks('tally_PGM'); // Check directly, which source is active
+			this.checkFeedbacks('tally_PVW'); // Check directly, which source is on preview
 		} else if (data['product_information'] !== undefined) {
 			this.log('info', `Connected to: ${data['product_information']['product_name']} at ${this.config.host}`);
 			this.switcher['product_name'] = data['product_information']['product_name'];
@@ -402,8 +411,10 @@ class instance extends instance_skel {
 				this.system_macros.push({ 'id': element['$']['name'], 'label': element['$']['name'] })
 			});
 			this.actions(); // Reset the actions, marco's could be updated
-		} if(data['shortcut_states'] !== undefined) {
+		} else if(data['shortcut_states'] !== undefined) {
 			// Handled by TCP states
+		} else {
+			console.log('data from request',data);
 		}
 	}
 	
