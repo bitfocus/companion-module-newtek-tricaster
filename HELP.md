@@ -30,9 +30,8 @@
 * Product version
 * Source on program
 * Source on preview
-* Datalink key 1
-* Datalink key 2
-* Datalink key 3
+* All inputs
+* All Datalink key/value pairs
 
 ### Available Presets
 * Sources to PGM
@@ -44,4 +43,4 @@
 * Streaming
 
 ### Datalink
-In the config of this module you can choose 3 key/value pairs to follow and display somewhere. When more is needed, let us know.
+All variables are being polled at the moment, set an interval (minimum of 500ms)

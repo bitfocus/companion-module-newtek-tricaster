@@ -39,6 +39,7 @@ class instance extends instance_skel {
 		this.tallyPGM = [];
 		this.datalink = [];
 		this.shortcut_states = [];
+		this.variables = []; 
 		this.mediaTargets = [];
 		this.meDestinations = [];
 		this.dskDestinations = [];
@@ -187,7 +188,7 @@ class instance extends instance_skel {
 				id: 'info',
 				width: 12,
 				label: 'Information',
-				value: 'We use polling to fetch datalink key/value pairs, enter a key you would like to follow, see variables below for the values'
+				value: 'We use polling to fetch datalink key/value pairs, see variables below for the values'
 			},
 			{
 				type: 'text',
@@ -202,30 +203,6 @@ class instance extends instance_skel {
 				label: 'Polling interval (0 for off)',
 				width: 2,
 				default: '0'
-			},
-			{
-				type: 'dropdown',
-				id: 'key1',
-				label: 'key to follow 1',
-				default: '',
-				choices: this.datalink,
-				width: 12
-			},
-			{
-				type: 'dropdown',
-				id: 'key2',
-				label: 'key to follow 2',
-				default: '',
-				choices: this.datalink,
-				width: 12
-			},
-			{
-				type: 'dropdown',
-				id: 'key3',
-				label: 'key to follow 3',
-				default: '',
-				choices: this.datalink,
-				width: 12
 			}
 		]
 	}
@@ -259,7 +236,7 @@ class instance extends instance_skel {
 
 		this.status(this.STATUS_UNKNOWN);
 
-		this.init_variables();
+		this.set_variablesDefinition();
 		this.connections();
 	}
 
@@ -308,11 +285,49 @@ class instance extends instance_skel {
 		this.status(this.STATUS_UNKNOWN);
 		clearInterval(this.pollAPI);
 
-		this.init_variables();
 		this.init_feedbacks();
 		this.connections();
+		this.set_variablesDefinition();
 	}
 
+	set_variablesDefinition(extra) {
+		if(this.variables.length == 0) {
+			this.variables = [{
+				name: 'product_name',
+				label: 'Product name'
+			},
+			{
+				name: 'product_version',
+				label: 'Product version'
+			},
+			{
+				name: 'pgm_source',
+				label: 'Source on Program'
+			},
+			{
+				name: 'pvw_source',
+				label: 'Source on Preview'
+			},
+			{
+				name: 'recording',
+				label: 'Recording'
+			},
+			{
+				name: 'streaming',
+				label: 'Streaming'
+			}]; 
+		}
+
+		if(extra != undefined && Array.isArray(extra)) {
+			extra.forEach(element => {
+				const index = this.variables.findIndex(el => el.name == element.name);
+				if(index == -1)	this.variables.push(element);
+			});
+			this.setVariableDefinitions(this.variables);
+		} else {
+			this.setVariableDefinitions(this.variables);
+		}
+	}
 	/**
 	 * Set the TCP connection to send shortcuts to the mixer, should be the fastest option
 	 */
@@ -382,19 +397,20 @@ class instance extends instance_skel {
 				this.setVariable('pvw_source', element['$']['value'].toLowerCase().split("|"));
 				element['$']['value'].toLowerCase().split("|").forEach(element2 => {
 					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
-					this.tallyPVW[this.inputs[index].id] = 'true';
+					if(index != -1) this.tallyPVW[this.inputs[index].id] = 'true';
 				});
 			} else if (element['$']['name'] == 'program_tally') {
 				this.tallyPGM = [];
 				this.setVariable('pgm_source', element['$']['value'].toLowerCase().split("|"));
 				element['$']['value'].toLowerCase().split("|").forEach(element2 => {
 					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
-					this.tallyPGM[this.inputs[index].id] = 'true';
+					if(index != -1) this.tallyPGM[this.inputs[index].id] = 'true';
 				});
 			} else if (element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11));
 				if (index != -1) {
 					this.inputs[index].short_name = element['$']['value'];
+					this.setVariable(this.inputs[index].name, element['$']['value']);
 				}
 				const va_index = this.meDestinations.findIndex((el) => el.label.slice(0, -6) == element['$']['name'].slice(0, -11));
 				if (va_index != -1) {
@@ -490,6 +506,7 @@ class instance extends instance_skel {
 	processData(data) {
 		if (data['tally'] !== undefined) { // Set PGM and PVW variable/Feedback
 			if (this.inputs.length == 0) {
+				let variables = [];
 				console.log('Load initial Data');
 				data['tally']['column'].forEach(element => {
 					this.inputs.push({
@@ -500,8 +517,10 @@ class instance extends instance_skel {
 						'short_name': element['$']['name']
 					})
 					element['$']['on_prev'] == 'true' ? this.tallyPVW[element['$']['index']] = 'true' : this.tallyPVW[element['$']['index']] = 'false';
-					element['$']['on_pgm'] == 'true' ? this.tallyPGM[element['$']['index']] = 'true' : this.tallyPGM[element['$']['index']] = 'false;'
+					element['$']['on_pgm'] == 'true' ? this.tallyPGM[element['$']['index']] = 'true' : this.tallyPGM[element['$']['index']] = 'false;';
+					variables.push({name: `${element['$']['name']}`, label: element['$']['name']});
 				});
+				this.set_variablesDefinition(variables);
 			}
 			this.init_feedbacks(); // Same for feedback as it holds the inputs
 			this.checkFeedbacks('tally_PGM'); // Check directly, which source is active
@@ -537,81 +556,20 @@ class instance extends instance_skel {
 		} else if (data['shortcut_states'] !== undefined) {
 			// Handled by TCP states
 		} else if (data['datalink_values'] !== undefined) {
-			// Efficient????
-			this.datalink = data['datalink_values']['data'].map(item => ({
-				id: item.key,
-				label: `${item.key} : ${item.value}`,
-				key: item.key,
-				value: item.value
-			}));
-			// this.datalink = data['datalink_values']['data'];
-			// Set first key
-			if(this.config.key1 != undefined && this.config.key1 != '')	{
-				const index = this.datalink.findIndex((el) => el.key == this.config.key1);
-				if(index != -1) {
-					this.setVariable('key1', this.datalink[index].value);
-				}
-			}
-			if(this.config.key2 != undefined && this.config.key2 != '')	{
-				const index = this.datalink.findIndex((el) => el.key == this.config.key2);
-				if(index != -1) {
-					this.setVariable('key2', this.datalink[index].value);
-				}
-			}
-			if(this.config.key3 != undefined && this.config.key3 != '')	{
-				const index = this.datalink.findIndex((el) => el.key == this.config.key3);
-				if(index != -1) {
-					this.setVariable('key3', this.datalink[index].value);
-				}
-			}
-			// console.log(this.datalink);
+			// This is done by polling
+			let variables = [];
+			let _datalink = [];
+			data['datalink_values']['data'].forEach(element => {
+				if(this.datalink[element.key] != element.value) this.setVariable(element.key,element.value);
+				_datalink[element.key] = element.value;
+				variables.push({name: element.key, label: element.key});
+			});
+			
+			this.datalink = _datalink;
+			this.set_variablesDefinition(variables);
 		} else {
 			// console.log('data from request',data);
 		}
-	}
-
-	/**
-	 * Set variable definitions
-	 */
-	init_variables() {
-		var variables = [{
-				name: 'product_name',
-				label: 'Product name'
-			},
-			{
-				name: 'product_version',
-				label: 'Product version'
-			},
-			{
-				name: 'pgm_source',
-				label: 'Source on Program'
-			},
-			{
-				name: 'pvw_source',
-				label: 'Source on Preview'
-			},
-			{
-				name: 'recording',
-				label: 'Recording'
-			},
-			{
-				name: 'streaming',
-				label: 'Streaming'
-			},
-			{
-				name: 'key1',
-				label: 'Key to follow 1'
-			},
-			{
-				name: 'key2',
-				label: 'Key to follow 2'
-			},
-			{
-				name: 'key3',
-				label: 'Key to follow 3'
-			}
-		]
-		this.setVariableDefinitions(variables)
 	}
 
 	/**
@@ -740,6 +698,7 @@ class instance extends instance_skel {
 		this.checkFeedbacks('tally_PGM');
 		this.checkFeedbacks('tally_PVW');
 	}
+	
 }
 
 exports = module.exports = instance;
