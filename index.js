@@ -6,12 +6,14 @@ const presets       = require('./presets');
 const ping          = require('ping');
 const parseString   = require('xml2js').parseString;
 const util          = require('util');
-const { executeFeedback, initFeedbacks } = require('./feedbacks');
+const {
+	executeFeedback,
+	initFeedbacks
+} = require('./feedbacks');
+const { findIndex } = require('lodash');
 
 let debug;
 let log;
-
-
 
 class instance extends instance_skel {
 	/**
@@ -35,6 +37,7 @@ class instance extends instance_skel {
 		this.tally = [];
 		this.tallyPVW = [];
 		this.tallyPGM = [];
+		this.datalink = [];
 		this.shortcut_states = [];
 		this.mediaTargets = [];
 		this.meDestinations = [];
@@ -43,20 +46,32 @@ class instance extends instance_skel {
 		this.createMediaTargets();
 		this.createMeDestinations();
 	}
-	
+
 	createMeDestinations() {
 		for (let index = 1; index < 9; index++) {
-			this.meDestinations.push({id: `v${index}_a_row`, label: `v${index} a bus`});
-			this.meDestinations.push({id: `v${index}_b_row`, label: `v${index} b bus`});
+			this.meDestinations.push({
+				id: `v${index}_a_row`,
+				label: `v${index} a bus`
+			});
+			this.meDestinations.push({
+				id: `v${index}_b_row`,
+				label: `v${index} b bus`
+			});
 			for (let dsk = 1; dsk < 5; dsk++) {
-				this.dskDestinations.push({id: `v${index}_dsk${dsk}`, label: `v${index} dsk ${dsk}`});
+				this.dskDestinations.push({
+					id: `v${index}_dsk${dsk}`,
+					label: `v${index} dsk ${dsk}`
+				});
 			}
 		}
 	}
-	
+
 	createDskDestinations() {
 		for (let dsk = 1; dsk < 5; dsk++) {
-			this.dskDestinations.push({id: `main_dsk${dsk}`, label: `main dsk ${dsk}`});
+			this.dskDestinations.push({
+				id: `main_dsk${dsk}`,
+				label: `main dsk ${dsk}`
+			});
 		}
 	}
 	/**
@@ -64,49 +79,153 @@ class instance extends instance_skel {
 	 */
 	createMediaTargets() {
 		for (let index = 1; index < 5; index++) {
-			this.mediaTargets.push({id: `ddr${index}_play`, label:`ddr${index} Play`})
-			this.mediaTargets.push({id: `ddr${index}_play_toggle`, label:`ddr${index} Play Toggle`})
-			this.mediaTargets.push({id: `ddr${index}_stop`, label:`ddr${index} Stop`})
-			this.mediaTargets.push({id: `ddr${index}_back`, label:`ddr${index} Back`})
-			this.mediaTargets.push({id: `ddr${index}_forward`, label:`ddr${index} Forward`})
+			this.mediaTargets.push({
+				id: `ddr${index}_play`,
+				label: `ddr${index} Play`
+			})
+			this.mediaTargets.push({
+				id: `ddr${index}_play_toggle`,
+				label: `ddr${index} Play Toggle`
+			})
+			this.mediaTargets.push({
+				id: `ddr${index}_stop`,
+				label: `ddr${index} Stop`
+			})
+			this.mediaTargets.push({
+				id: `ddr${index}_back`,
+				label: `ddr${index} Back`
+			})
+			this.mediaTargets.push({
+				id: `ddr${index}_forward`,
+				label: `ddr${index} Forward`
+			})
 		}
 		for (let index = 1; index < 3; index++) {
-			this.mediaTargets.push({id: `gfx${index}_play`, label:`gfx${index} Play`})
-			this.mediaTargets.push({id: `gfx${index}_play_toggle`, label:`gfx${index} Play Toggle`})
-			this.mediaTargets.push({id: `gfx${index}_stop`, label:`gfx${index} Stop`})
-			this.mediaTargets.push({id: `gfx${index}_back`, label:`gfx${index} Back`})
-			this.mediaTargets.push({id: `gfx${index}_forward`, label:`gfx${index} Forward`})
+			this.mediaTargets.push({
+				id: `gfx${index}_play`,
+				label: `gfx${index} Play`
+			})
+			this.mediaTargets.push({
+				id: `gfx${index}_play_toggle`,
+				label: `gfx${index} Play Toggle`
+			})
+			this.mediaTargets.push({
+				id: `gfx${index}_stop`,
+				label: `gfx${index} Stop`
+			})
+			this.mediaTargets.push({
+				id: `gfx${index}_back`,
+				label: `gfx${index} Back`
+			})
+			this.mediaTargets.push({
+				id: `gfx${index}_forward`,
+				label: `gfx${index} Forward`
+			})
 		}
-		this.mediaTargets.push({id: `stills_play`, label:`stills Play`})
-		this.mediaTargets.push({id: `stills_play_toggle`, label:`stills Play Toggle`})
-		this.mediaTargets.push({id: `stills_stop`, label:`stills Stop`})
-		this.mediaTargets.push({id: `stills_back`, label:`stills Back`})
-		this.mediaTargets.push({id: `stills_forward`, label:`stills Forward`})
-		
-		this.mediaTargets.push({id: `titles_play`, label:`titles Play`})
-		this.mediaTargets.push({id: `titles_play_toggle`, label:`titles Play Toggle`})
-		this.mediaTargets.push({id: `titles_stop`, label:`titles Stop`})
-		this.mediaTargets.push({id: `titles_back`, label:`titles Back`})
-		this.mediaTargets.push({id: `titles_forward`, label:`titles Forward`})
+		this.mediaTargets.push({
+			id: `stills_play`,
+			label: `stills Play`
+		})
+		this.mediaTargets.push({
+			id: `stills_play_toggle`,
+			label: `stills Play Toggle`
+		})
+		this.mediaTargets.push({
+			id: `stills_stop`,
+			label: `stills Stop`
+		})
+		this.mediaTargets.push({
+			id: `stills_back`,
+			label: `stills Back`
+		})
+		this.mediaTargets.push({
+			id: `stills_forward`,
+			label: `stills Forward`
+		})
+
+		this.mediaTargets.push({
+			id: `titles_play`,
+			label: `titles Play`
+		})
+		this.mediaTargets.push({
+			id: `titles_play_toggle`,
+			label: `titles Play Toggle`
+		})
+		this.mediaTargets.push({
+			id: `titles_stop`,
+			label: `titles Stop`
+		})
+		this.mediaTargets.push({
+			id: `titles_back`,
+			label: `titles Back`
+		})
+		this.mediaTargets.push({
+			id: `titles_forward`,
+			label: `titles Forward`
+		})
 	}
 	/**
 	 * The main config fields for user input like IP address
 	 */
 	config_fields() {
-		return [
-			{
-				type:  'text',
-				id:    'info',
-				width:  12,
+		return [{
+				type: 'text',
+				id: 'info',
+				width: 12,
 				label: 'Information',
 				value: 'This module connects to a Tricaster.'
 			},
 			{
-				type:  'textinput',
-				id:    'host',
+				type: 'textinput',
+				id: 'host',
 				label: 'Target IP',
-				width:  6,
-				regex:  this.REGEX_IP
+				width: 6,
+				regex: this.REGEX_IP
+			},
+			{
+				type: 'text',
+				id: 'info',
+				width: 12,
+				label: 'Information',
+				value: 'We use polling to fetch datalink key/value pairs, enter a key you would like to follow, see variables below for the values'
+			},
+			{
+				type: 'text',
+				id: 'info',
+				width: 10,
+				label: 'Information',
+				value: 'Put the polling interval in milliseconds here, 0 for off, minimal 500ms interval'
+			},
+			{
+				type: 'textinput',
+				id: 'pollInterval',
+				label: 'Polling interval (0 for off)',
+				width: 2,
+				default: '0'
+			},
+			{
+				type: 'dropdown',
+				id: 'key1',
+				label: 'key to follow 1',
+				default: '',
+				choices: this.datalink,
+				width: 12
+			},
+			{
+				type: 'dropdown',
+				id: 'key2',
+				label: 'key to follow 2',
+				default: '',
+				choices: this.datalink,
+				width: 12
+			},
+			{
+				type: 'dropdown',
+				id: 'key3',
+				label: 'key to follow 3',
+				default: '',
+				choices: this.datalink,
+				width: 12
 			}
 		]
 	}
@@ -119,16 +238,15 @@ class instance extends instance_skel {
 		this.setActions(this.getActions());
 	}
 
-	sort(array) {
-		array((a, b) => b - a);
-	}
-
 	/**
 	 * Handle stuff when modules gets destroyed
 	 */
 	destroy() {
 		debug("destroy", this.id);
 		this.active = false;
+		if (this.pollAPI) {
+			clearInterval(this.pollAPI);
+		}
 	}
 
 	/**
@@ -144,19 +262,28 @@ class instance extends instance_skel {
 		this.init_variables();
 		this.connections();
 	}
-	
+
 	connections() {
 		// Settings must be made first
-		if(this.config.host !== undefined) {
+		if (this.config.host !== undefined) {
 			var cfg = {
 				timeout: 4,
 			};
 			ping.sys.probe(this.config.host, (isAlive) => {
-				if(isAlive) {
+				if (isAlive) {
 					// Get all initial info needed
 					this.sendGetRequest(`http://${this.config.host}/v1/version`); // Fetch mixer info
 					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial input info
 					this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
+					if (this.config.pollInterval != 0) {
+						this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalink stuff
+						if (this.pollAPI) {
+							clearInterval(this.pollAPI);
+						}
+						this.pollAPI = setInterval(() => {
+							this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalink stuff
+						}, this.config.pollInterval < 500 ? 500 : this.config.pollInterval);
+					}
 					this.init_TCP();
 					// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info including tally
 					// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch states of players etc
@@ -179,28 +306,17 @@ class instance extends instance_skel {
 	updateConfig(config) {
 		this.config = config
 		this.status(this.STATUS_UNKNOWN);
+		clearInterval(this.pollAPI);
 
 		this.init_variables();
 		this.init_feedbacks();
-		
-		
-		// Get all initial info needed
-		this.sendGetRequest(`http://${this.config.host}/v1/version`); // Fetch mixer info
-		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial input info
-		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
-		// this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalinks
-
-		this.init_TCP();
-		// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info including tally
-		// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch states of players etc
-		
-		this.init_presets();
+		this.connections();
 	}
 
 	/**
 	 * Set the TCP connection to send shortcuts to the mixer, should be the fastest option
-	*/
-	init_TCP () {
+	 */
+	init_TCP() {
 		this.config.port = 5951; // Fixed port
 		this.inputBuffer = Buffer.from("");
 
@@ -237,7 +353,7 @@ class instance extends instance_skel {
 					clearTimeout(this.errorTimer);
 
 					this.inputBuffer = Buffer.concat([this.inputBuffer, inputData]);
-		
+
 					parseString(
 						Buffer.from("<root>" + this.inputBuffer.toString() + "</root>"),
 						(err, result) => {
@@ -255,54 +371,54 @@ class instance extends instance_skel {
 			}
 		}
 	}
-	
+
 	/**
 	 * @param  {} states
 	 */
 	shortcutStatesIngest(states) {
 		states.forEach(element => {
-			if(element['$']['name'] == 'preview_tally') {
+			if (element['$']['name'] == 'preview_tally') {
 				this.tallyPVW = [];
 				this.setVariable('pvw_source', element['$']['value'].toLowerCase().split("|"));
 				element['$']['value'].toLowerCase().split("|").forEach(element2 => {
 					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
 					this.tallyPVW[this.inputs[index].id] = 'true';
 				});
-			} else if(element['$']['name'] == 'program_tally') {
+			} else if (element['$']['name'] == 'program_tally') {
 				this.tallyPGM = [];
 				this.setVariable('pgm_source', element['$']['value'].toLowerCase().split("|"));
 				element['$']['value'].toLowerCase().split("|").forEach(element2 => {
 					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
 					this.tallyPGM[this.inputs[index].id] = 'true';
 				});
-			} else if(element['$']['name'].match(/_short_name/)) {
+			} else if (element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11));
-				if(index != -1) {
+				if (index != -1) {
 					this.inputs[index].short_name = element['$']['value'];
-				} 
+				}
 				const va_index = this.meDestinations.findIndex((el) => el.label.slice(0, -6) == element['$']['name'].slice(0, -11));
-				if(va_index != -1) {
+				if (va_index != -1) {
 					this.meDestinations[va_index].label = element['$']['value'] + " a bus";
-				} 
+				}
 				const vb_index = this.meDestinations.findIndex((el) => el.label.slice(0, -6) == element['$']['name'].slice(0, -11));
-				if(vb_index != -1) {
+				if (vb_index != -1) {
 					this.meDestinations[vb_index].label = element['$']['value'] + " b bus";
-				} 
-			} else if(element['$']['name'].match(/_long_name/)) {
-				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -10) );
-				if(index != -1) {
+				}
+			} else if (element['$']['name'].match(/_long_name/)) {
+				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -10));
+				if (index != -1) {
 					this.inputs[index].long_name = element['$']['value'];
 					this.inputs[index].label = element['$']['value'];
-				} 
-			} else if(element['$']['name'].match(/record_toggle/)) {
+				}
+			} else if (element['$']['name'].match(/record_toggle/)) {
 				this.switcher['recording'] = element['$']['value'] == '1' ? true : false;
 				this.setVariable('recording', element['$']['value'] == '1' ? true : false);
 				this.checkFeedbacks['tally_record'];
-			} else if(element['$']['name'].match(/streaming_toggle/)) {
+			} else if (element['$']['name'].match(/streaming_toggle/)) {
 				this.switcher['streaming'] = element['$']['value'] == '1' ? true : false;
 				this.setVariable('streaming', element['$']['value'] == '1' ? true : false);
 				this.checkFeedbacks['tally_streaming'];
-			} else if(element['$']['name'].match(/ddr1_play/) || element['$']['name'].match(/ddr2_play/) || element['$']['name'].match(/ddr3_play/) || element['$']['name'].match(/ddr4_play/)) {
+			} else if (element['$']['name'].match(/ddr1_play/) || element['$']['name'].match(/ddr2_play/) || element['$']['name'].match(/ddr3_play/) || element['$']['name'].match(/ddr4_play/)) {
 				this.shortcut_states[element['$']['name']] == element['$']['value'];
 				this.checkFeedbacks['play_media'];
 			}
@@ -315,24 +431,23 @@ class instance extends instance_skel {
 	 * @param  {} data
 	 */
 	incomingData(data) {
-    if (data.shortcut_states !== undefined) {
-      if (Array.isArray(data.shortcut_states)) {
-        data.shortcut_states.forEach((states) => {
+		if (data.shortcut_states !== undefined) {
+			if (Array.isArray(data.shortcut_states)) {
+				data.shortcut_states.forEach((states) => {
 					this.shortcutStatesIngest(states.shortcut_state);
-					}
-        );
-      } else {
-        this.shortcutStatesIngest(data.shortcut_states.shortcut_state);
-      }
+				});
+			} else {
+				this.shortcutStatesIngest(data.shortcut_states.shortcut_state);
+			}
 			this.actions();
 			this.init_presets();
-    } else {
-      console.log(
-        "UNKNOWN INCOMING DATA",
-        util.inspect(data, false, null, true)
-      );
-    }
-  }
+		} else {
+			console.log(
+				"UNKNOWN INCOMING DATA",
+				util.inspect(data, false, null, true)
+			);
+		}
+	}
 
 	/**
 	 * Initialize presets
@@ -352,13 +467,12 @@ class instance extends instance_skel {
 			if (err !== null) {
 				this.status(this.STATUS_ERROR, result.error.code);
 				this.log('error', 'Connection failed (' + result.error.code + ')');
-				this.retryConnection();     
-			}
-			else {
+				this.retryConnection();
+			} else {
 				if (result.response.statusCode == 200) {
 					this.status(this.STATUS_OK);
 					this.processData(result.data);
-				} else if (result.response.statusCode == 401) {     // mmm password?
+				} else if (result.response.statusCode == 401) { // mmm password?
 					this.status(this.STATUS_ERROR, "Password needed?");
 					this.log('error', "Password? HTTP status code: " + result.response.statusCode);
 				} else {
@@ -368,17 +482,23 @@ class instance extends instance_skel {
 			}
 		});
 	}
-	
+
 	/**
-	 * Process incoming data from the websocket connection
+	 * Process incoming data from the rest connection
 	 * @param  {} data
 	 */
 	processData(data) {
-		if(data['tally'] !== undefined ) { // Set PGM and PVW variable/Feedback
+		if (data['tally'] !== undefined) { // Set PGM and PVW variable/Feedback
 			if (this.inputs.length == 0) {
 				console.log('Load initial Data');
 				data['tally']['column'].forEach(element => {
-					this.inputs.push({'id': element['$']['index'], 'label': element['$']['name'], 'name': element['$']['name'], 'long_name': element['$']['name'], 'short_name': element['$']['name'] })
+					this.inputs.push({
+						'id': element['$']['index'],
+						'label': element['$']['name'],
+						'name': element['$']['name'],
+						'long_name': element['$']['name'],
+						'short_name': element['$']['name']
+					})
 					element['$']['on_prev'] == 'true' ? this.tallyPVW[element['$']['index']] = 'true' : this.tallyPVW[element['$']['index']] = 'false';
 					element['$']['on_pgm'] == 'true' ? this.tallyPGM[element['$']['index']] = 'true' : this.tallyPGM[element['$']['index']] = 'false;'
 				});
@@ -408,27 +528,88 @@ class instance extends instance_skel {
 		} else if (data['macros'] !== undefined) {
 			// Fetch all macros
 			data['macros']['systemfolder']['macro'].forEach(element => {
-				this.system_macros.push({ 'id': element['$']['name'], 'label': element['$']['name'] })
+				this.system_macros.push({
+					'id': element['$']['name'],
+					'label': element['$']['name']
+				})
 			});
 			this.actions(); // Reset the actions, marco's could be updated
-		} else if(data['shortcut_states'] !== undefined) {
+		} else if (data['shortcut_states'] !== undefined) {
 			// Handled by TCP states
+		} else if (data['datalink_values'] !== undefined) {
+			// Efficient????
+			this.datalink = data['datalink_values']['data'].map(item => ({
+				id: item.key,
+				label: `${item.key} : ${item.value}`,
+				key: item.key,
+				value: item.value
+			}));
+			// this.datalink = data['datalink_values']['data'];
+			// Set first key
+			if(this.config.key1 != undefined && this.config.key1 != '')	{
+				const index = this.datalink.findIndex((el) => el.key == this.config.key1);
+				if(index != -1) {
+					this.setVariable('key1', this.datalink[index].value);
+				}
+			}
+			if(this.config.key2 != undefined && this.config.key2 != '')	{
+				const index = this.datalink.findIndex((el) => el.key == this.config.key2);
+				if(index != -1) {
+					this.setVariable('key2', this.datalink[index].value);
+				}
+			}
+			if(this.config.key3 != undefined && this.config.key3 != '')	{
+				const index = this.datalink.findIndex((el) => el.key == this.config.key3);
+				if(index != -1) {
+					this.setVariable('key3', this.datalink[index].value);
+				}
+			}
+			// console.log(this.datalink);
 		} else {
-			console.log('data from request',data);
+			// console.log('data from request',data);
 		}
 	}
-	
+
 	/**
 	 * Set variable definitions
 	 */
 	init_variables() {
-		var variables = [
-			{ name: 'product_name', label: 'Product name' },
-			{ name: 'product_version', label: 'Product version' },
-			{ name: 'pgm_source', label: 'Source on Program' },
-			{ name: 'pvw_source', label: 'Source on Preview' },
-			{ name: 'recording', label: 'Recording' },
-			{ name: 'streaming', label: 'Streaming' },
+		var variables = [{
+				name: 'product_name',
+				label: 'Product name'
+			},
+			{
+				name: 'product_version',
+				label: 'Product version'
+			},
+			{
+				name: 'pgm_source',
+				label: 'Source on Program'
+			},
+			{
+				name: 'pvw_source',
+				label: 'Source on Preview'
+			},
+			{
+				name: 'recording',
+				label: 'Recording'
+			},
+			{
+				name: 'streaming',
+				label: 'Streaming'
+			},
+			{
+				name: 'key1',
+				label: 'Key to follow 1'
+			},
+			{
+				name: 'key2',
+				label: 'Key to follow 2'
+			},
+			{
+				name: 'key3',
+				label: 'Key to follow 3'
+			}
 		]
 		this.setVariableDefinitions(variables)
 	}
@@ -449,7 +630,7 @@ class instance extends instance_skel {
 	feedback(feedback, bank) {
 		return executeFeedback.bind(this)(feedback, bank);
 	}
-	
+
 	/**
 	 * Create a WebSocket connection for retrieving updates
 	 */
@@ -476,13 +657,13 @@ class instance extends instance_skel {
 		ws.on('message', (msg) => {
 			if (msg.search('tally') != '-1') {
 				// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
-			} 
+			}
 			if (msg.search('switcher') != '-1') {
 				// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info
-			} 
+			}
 			if (msg.search('shortcut_states') != '-1') {
 				// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch shotcut info
-			}	else {
+			} else {
 				debug(msg);
 			}
 		});
@@ -496,12 +677,12 @@ class instance extends instance_skel {
 		})
 	}
 
-		/**
+	/**
 	 * Process all executed actions (by user)
 	 * @param  {} action
 	 */
 	action(action) {
-		let id  = action.action;
+		let id = action.action;
 		let opt = action.options;
 		let cmd = '';
 
