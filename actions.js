@@ -9,15 +9,15 @@ module.exports = {
 		actions['record_stop'] = {	label: 'Record Stop'	}
 		actions['streaming_toggle'] = {	label: 'Toggle Streaming'	}
 
-		// actions['macros'] = {
-		// 	label: 'Run system macro',
-		// 	options: [{
-		// 		label: 'Select macro',
-		// 		type: 'dropdown',
-		// 		id: 'macro',
-		// 		choices: this.system_macros
-		// 	}]
-		// }
+		actions['macros'] = {
+			label: 'Run  macro',
+			options: [{
+				label: 'Select macro',
+				type: 'textinput',
+				id: 'macro',
+				default: ''
+			}]
+		}
 
 		actions['source_pvw'] = {
 			label: 'Set source to preview',

@@ -1,11 +1,11 @@
 const instance_skel = require('../../instance_skel');
-const tcp           = require('../../tcp');
-const WebSocket     = require('ws');
-const actions       = require('./actions');
-const presets       = require('./presets');
-const ping          = require('ping');
-const parseString   = require('xml2js').parseString;
-const util          = require('util');
+const tcp = require('../../tcp');
+const WebSocket = require('ws');
+const actions = require('./actions');
+const presets = require('./presets');
+const ping = require('ping');
+const parseString = require('xml2js').parseString;
+const util = require('util');
 const {
 	executeFeedback,
 	initFeedbacks
@@ -39,7 +39,7 @@ class instance extends instance_skel {
 		this.tallyPGM = [];
 		this.datalink = [];
 		this.shortcut_states = [];
-		this.variables = []; 
+		this.variables = [];
 		this.mediaTargets = [];
 		this.meDestinations = [];
 		this.dskDestinations = [];
@@ -170,40 +170,40 @@ class instance extends instance_skel {
 	 */
 	config_fields() {
 		return [{
-				type: 'text',
-				id: 'info',
-				width: 12,
-				label: 'Information',
-				value: 'This module connects to a Tricaster.'
-			},
-			{
-				type: 'textinput',
-				id: 'host',
-				label: 'Target IP',
-				width: 6,
-				regex: this.REGEX_IP
-			},
-			{
-				type: 'text',
-				id: 'info',
-				width: 12,
-				label: 'Information',
-				value: 'We use polling to fetch datalink key/value pairs, see variables below for the values'
-			},
-			{
-				type: 'text',
-				id: 'info',
-				width: 10,
-				label: 'Information',
-				value: 'Put the polling interval in milliseconds here, 0 for off, minimal 500ms interval'
-			},
-			{
-				type: 'textinput',
-				id: 'pollInterval',
-				label: 'Polling interval (0 for off)',
-				width: 2,
-				default: '0'
-			}
+			type: 'text',
+			id: 'info',
+			width: 12,
+			label: 'Information',
+			value: 'This module connects to a Tricaster.'
+		},
+		{
+			type: 'textinput',
+			id: 'host',
+			label: 'Target IP',
+			width: 6,
+			regex: this.REGEX_IP
+		},
+		{
+			type: 'text',
+			id: 'info',
+			width: 12,
+			label: 'Information',
+			value: 'We use polling to fetch datalink key/value pairs, see variables below for the values'
+		},
+		{
+			type: 'text',
+			id: 'info',
+			width: 10,
+			label: 'Information',
+			value: 'Put the polling interval in milliseconds here, 0 for off, minimal 500ms interval'
+		},
+		{
+			type: 'textinput',
+			id: 'pollInterval',
+			label: 'Polling interval (0 for off)',
+			width: 2,
+			default: '0'
+		}
 		]
 	}
 
@@ -291,7 +291,7 @@ class instance extends instance_skel {
 	}
 
 	set_variablesDefinition(extra) {
-		if(this.variables.length == 0) {
+		if (this.variables.length == 0) {
 			this.variables = [{
 				name: 'product_name',
 				label: 'Product name'
@@ -315,13 +315,13 @@ class instance extends instance_skel {
 			{
 				name: 'streaming',
 				label: 'Streaming'
-			}]; 
+			}];
 		}
 
-		if(extra != undefined && Array.isArray(extra)) {
+		if (extra != undefined && Array.isArray(extra)) {
 			extra.forEach(element => {
 				const index = this.variables.findIndex(el => el.name == element.name);
-				if(index == -1)	this.variables.push(element);
+				if (index == -1) this.variables.push(element);
 			});
 			this.setVariableDefinitions(this.variables);
 		} else {
@@ -333,7 +333,7 @@ class instance extends instance_skel {
 	 */
 	init_TCP() {
 		this.config.port = 5951; // Fixed port
-		this.inputBuffer = Buffer.from("");
+		this.inputBuffer = Buffer.from('');
 
 		if (this.config.host !== undefined) {
 			if (this.socket !== undefined) {
@@ -342,9 +342,12 @@ class instance extends instance_skel {
 			}
 
 			this.status(this.STATE_WARNING, 'Connecting');
-			if (this.config.host) {
 				this.socket = new tcp(this.config.host, this.config.port);
-
+				
+				this.socket.on('ECONNREFUSED', err => {
+					this.log('error', "Network error: " + err.message);
+				});
+				
 				this.socket.on('status_change', (status, message) => {
 					this.status(status, message); // Update status when something happens
 				});
@@ -357,7 +360,7 @@ class instance extends instance_skel {
 
 				this.socket.on('connect', () => {
 					this.status(this.STATE_OK);
-					// Ask the mixer to give us variable (register/state) updates on connect
+					// Ask the mixer to give us variable (register/state) updates on connectc
 					this.socket.send(`<register name="NTK_states"/>\n`);
 
 					debug("TriCaster shortcut socket Opened");
@@ -383,7 +386,6 @@ class instance extends instance_skel {
 						}
 					);
 				});
-			}
 		}
 	}
 
@@ -397,14 +399,14 @@ class instance extends instance_skel {
 				this.setVariable('pvw_source', element['$']['value'].toLowerCase().split("|"));
 				element['$']['value'].toLowerCase().split("|").forEach(element2 => {
 					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
-					if(index != -1) this.tallyPVW[this.inputs[index].id] = 'true';
+					if (index != -1) this.tallyPVW[this.inputs[index].id] = 'true';
 				});
 			} else if (element['$']['name'] == 'program_tally') {
 				this.tallyPGM = [];
 				this.setVariable('pgm_source', element['$']['value'].toLowerCase().split("|"));
 				element['$']['value'].toLowerCase().split("|").forEach(element2 => {
 					const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
-					if(index != -1) this.tallyPGM[this.inputs[index].id] = 'true';
+					if (index != -1) this.tallyPGM[this.inputs[index].id] = 'true';
 				});
 			} else if (element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11));
@@ -499,6 +501,11 @@ class instance extends instance_skel {
 		});
 	}
 
+	retryConnection() {
+		setTimeout(() => {
+			this.connections();
+		},3000)
+	}
 	/**
 	 * Process incoming data from the rest connection
 	 * @param  {} data
@@ -518,7 +525,7 @@ class instance extends instance_skel {
 					})
 					element['$']['on_prev'] == 'true' ? this.tallyPVW[element['$']['index']] = 'true' : this.tallyPVW[element['$']['index']] = 'false';
 					element['$']['on_pgm'] == 'true' ? this.tallyPGM[element['$']['index']] = 'true' : this.tallyPGM[element['$']['index']] = 'false;';
-					variables.push({name: `${element['$']['name']}`, label: element['$']['name']});
+					variables.push({ name: `${element['$']['name']}`, label: element['$']['name'] });
 				});
 				this.set_variablesDefinition(variables);
 			}
@@ -560,11 +567,11 @@ class instance extends instance_skel {
 			let variables = [];
 			let _datalink = [];
 			data['datalink_values']['data'].forEach(element => {
-				if(this.datalink[element.key] != element.value) this.setVariable(element.key,element.value);
+				if (this.datalink[element.key] != element.value) this.setVariable(element.key, element.value);
 				_datalink[element.key] = element.value;
-				variables.push({name: element.key, label: element.key});
+				variables.push({ name: element.key, label: element.key });
 			});
-			
+
 			this.datalink = _datalink;
 			this.set_variablesDefinition(variables);
 		} else {
@@ -587,52 +594,6 @@ class instance extends instance_skel {
 	 */
 	feedback(feedback, bank) {
 		return executeFeedback.bind(this)(feedback, bank);
-	}
-
-	/**
-	 * Create a WebSocket connection for retrieving updates
-	 */
-	init_websocket_listener() {
-		const url = 'ws://' + this.config.host + '/v1/change_notifications';
-		const ws = new WebSocket(url);
-
-		ws.on('open', () => {
-			// ping server every 15 seconds to keep connection open
-			const interval = setInterval(function () {
-				// readyState 1 = OPEN
-				if (ws.readyState == 1) {
-					ws.send('keep alive');
-				}
-				// readyState 2 = CLOSING, readyState 3 = CLOSED
-				else if (ws.readyState == 2 || ws.readyState == 3) {
-					clearInterval(interval);
-				}
-			}, 15000);
-
-			console.log("TriCaster Listener WebSocket Opened");
-		});
-
-		ws.on('message', (msg) => {
-			if (msg.search('tally') != '-1') {
-				// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial tally info
-			}
-			if (msg.search('switcher') != '-1') {
-				// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher info
-			}
-			if (msg.search('shortcut_states') != '-1') {
-				// this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=shortcut_states`) // Fetch shotcut info
-			} else {
-				debug(msg);
-			}
-		});
-
-		ws.on('onclose', () => {
-			console.log('Strange, socket is closed');
-		});
-
-		ws.on('onerror', (msg) => {
-			console.log('Error', msg.data);
-		})
 	}
 
 	/**
@@ -666,7 +627,7 @@ class instance extends instance_skel {
 				cmd = `<shortcuts><shortcut name="${opt.destination}" value="${opt.source}" /></shortcuts>`;
 				break;
 			case 'source_to_dsk':
-				cmd = `<shortcuts><shortcut name="${opt.dsk}_select" value="${opt.source}" /></shortcuts>`;
+				cmd = `<shortcuts><shortcut name="${opt.dskDestinations}_select" value="${opt.source}" /></shortcuts>`;
 				break;
 			case 'media_target':
 				cmd = `<shortcuts><shortcut name="${opt.target}" /></shortcuts>`;
@@ -686,6 +647,11 @@ class instance extends instance_skel {
 			case 'custom':
 				cmd = opt.custom;
 				break;
+			case 'macros':
+				this.system.emit('rest_get', `http://TriCasterIP/v1/trigger?name=${opt.macro}`, (err, res) => {
+					console.log(res);
+				})
+				break;
 		}
 
 		if (cmd !== '') {
@@ -698,7 +664,7 @@ class instance extends instance_skel {
 		this.checkFeedbacks('tally_PGM');
 		this.checkFeedbacks('tally_PVW');
 	}
-	
+
 }
 
 exports = module.exports = instance;
