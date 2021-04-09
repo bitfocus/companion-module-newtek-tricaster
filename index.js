@@ -344,10 +344,6 @@ class instance extends instance_skel {
 			this.status(this.STATE_WARNING, 'Connecting');
 				this.socket = new tcp(this.config.host, this.config.port);
 				
-				this.socket.on('ECONNREFUSED', err => {
-					this.log('error', "Network error: " + err.message);
-				});
-				
 				this.socket.on('status_change', (status, message) => {
 					this.status(status, message); // Update status when something happens
 				});
@@ -385,6 +381,16 @@ class instance extends instance_skel {
 							}
 						}
 					);
+				});
+				
+				// Catch "ECONNREFUSED" error and others
+				process.on('uncaughtException', (err) => {
+					if(err.errno === 'ECONNREFUSED') {
+						console.log("TCP error: " + err);
+					}
+					else {
+						console.log(err);
+					}
 				});
 		}
 	}
@@ -485,7 +491,6 @@ class instance extends instance_skel {
 			if (err !== null) {
 				this.status(this.STATUS_ERROR, result.error.code);
 				this.log('error', 'Connection failed (' + result.error.code + ')');
-				this.retryConnection();
 			} else {
 				if (result.response.statusCode == 200) {
 					this.status(this.STATUS_OK);
@@ -501,11 +506,6 @@ class instance extends instance_skel {
 		});
 	}
 
-	retryConnection() {
-		setTimeout(() => {
-			this.connections();
-		},3000)
-	}
 	/**
 	 * Process incoming data from the rest connection
 	 * @param  {} data
