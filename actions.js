@@ -7,7 +7,16 @@ module.exports = {
 		actions['auto'] = {	label: 'Auto transition'	}
 		actions['record_start'] = {	label: 'Record Start'	}
 		actions['record_stop'] = {	label: 'Record Stop'	}
-		actions['streaming_toggle'] = {	label: 'Toggle Streaming'	}
+		actions['streaming'] = {	
+			label: 'Streaming',
+			options: [{
+				label: 'on/off',
+				id: 'force',
+				type: 'dropdown',
+				choices: [{id: 1, label: 'on'},{id: 0, label: 'off'}],
+				default: 1
+			}]
+		}
 
 		actions['macros'] = {
 			label: 'Run  macro',

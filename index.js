@@ -437,6 +437,7 @@ class instance extends instance_skel {
 				this.setVariable('recording', element['$']['value'] == '1' ? true : false)
 				this.checkFeedbacks['tally_record']
 			} else if (element['$']['name'].match(/streaming_toggle/)) {
+				console.log("stream",element['$']['value']);
 				this.switcher['streaming'] = element['$']['value'] == '1' ? true : false
 				this.setVariable('streaming', element['$']['value'] == '1' ? true : false)
 				this.checkFeedbacks['tally_streaming']
@@ -452,6 +453,7 @@ class instance extends instance_skel {
 		})
 		this.checkFeedbacks('tally_PVW')
 		this.checkFeedbacks('tally_PGM')
+		this.checkFeedbacks("tally_streaming")
 	}
 	/**
 	 * @param  {} data
@@ -620,8 +622,10 @@ class instance extends instance_skel {
 			// case 'macros':
 			// 	cmd = `<shortcuts><shortcut name="play_macro_byname"><entry key="name" value="${opt.macro}" /></shortcut></shortcuts>`;
 			// 	break;
-			case 'streaming_toggle':
-				cmd = '<shortcuts><shortcut name="streaming_toggle" /></shortcuts>'
+			case 'streaming':
+				cmd = `<shortcuts><shortcut name="streaming_toggle" value="${opt.force}" /></shortcuts>`
+				this.switcher['streaming'] = opt.force == '1' ? true : false
+				this.setVariable('streaming', opt.force == '1' ? true : false)
 				break
 			case 'source_pgm':
 				cmd = `<shortcuts><shortcut name="main_a_row" value="${opt.source}" /></shortcuts>`
@@ -665,12 +669,13 @@ class instance extends instance_skel {
 		if (cmd !== '') {
 			// send the xml to TCP socket
 			this.socket.send(cmd + '\n')
-			console.log(cmd)
+			// console.log(cmd)
 		} else {
 			// mmm do matching action found?
 		}
 		this.checkFeedbacks('tally_PGM')
 		this.checkFeedbacks('tally_PVW')
+		this.checkFeedbacks['tally_streaming']
 	}
 }
 

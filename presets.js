@@ -74,7 +74,7 @@ exports.getPresets = function () {
 		label: 'STREAM',
 		bank: {
 			style: 'text',
-			text: 'Stream Toggle',
+			text: 'Stream on',
 			size: '14',
 			color: foregroundColor,
 			bgcolor: backgroundColor
@@ -89,7 +89,36 @@ exports.getPresets = function () {
 			},
 		],
 		actions: [{
-			action: 'streaming_toggle'
+			action: 'streaming',
+			options: {
+				force: "1"
+			}
+		}]
+	})
+	presets.push({
+		category: 'Basic',
+		label: 'STREAM',
+		bank: {
+			style: 'text',
+			text: 'Stream off',
+			size: '14',
+			color: foregroundColor,
+			bgcolor: backgroundColor
+		},
+		feedbacks: [
+			{
+				type: 'tally_streaming',
+				options: {
+					bg: this.rgb(255, 0, 0),
+					fg: this.rgb(255, 255, 255),
+				},
+			},
+		],
+		actions: [{
+			action: 'streaming',
+			options: {
+				force: "0"
+			}
 		}]
 	})
 
