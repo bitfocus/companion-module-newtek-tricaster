@@ -2,8 +2,8 @@ exports.getPresets = function () {
 	let presets = []
 	const foregroundColor = this.rgb(255, 255, 255)
 	const backgroundColor = this.rgb(0, 0, 0)
-		
-	/** 
+
+	/**
 	 * Take
 	 */
 	presets.push({
@@ -14,13 +14,15 @@ exports.getPresets = function () {
 			text: 'TAKE',
 			size: '14',
 			color: foregroundColor,
-			bgcolor: this.rgb(255,0,0)
+			bgcolor: this.rgb(255, 0, 0),
 		},
-		actions: [{
-			action: 'take'
-		}]
+		actions: [
+			{
+				action: 'take',
+			},
+		],
 	})
-	/** 
+	/**
 	 * Auto
 	 */
 	presets.push({
@@ -31,13 +33,37 @@ exports.getPresets = function () {
 			text: 'AUTO',
 			size: '14',
 			color: foregroundColor,
-			bgcolor: this.rgb(255,0,0)
+			bgcolor: this.rgb(255, 0, 0),
 		},
-		actions: [{
-			action: 'auto'
-		}]
+		actions: [
+			{
+				action: 'auto',
+			},
+		],
 	})
-	/** 
+	/**
+	 * Auto dsk
+	 */
+	presets.push({
+		category: 'Basic',
+		label: 'AUTO DSK',
+		bank: {
+			style: 'text',
+			text: 'AUTO DSK1',
+			size: '14',
+			color: foregroundColor,
+			bgcolor: this.rgb(255, 0, 0),
+		},
+		actions: [
+			{
+				action: 'auto_dsk',
+				options: {
+					dsk: 'dsk1',
+				},
+			},
+		],
+	})
+	/**
 	 * Record
 	 */
 	presets.push({
@@ -48,7 +74,7 @@ exports.getPresets = function () {
 			text: 'REC',
 			size: '14',
 			color: foregroundColor,
-			bgcolor: backgroundColor
+			bgcolor: backgroundColor,
 		},
 		feedbacks: [
 			{
@@ -59,14 +85,18 @@ exports.getPresets = function () {
 				},
 			},
 		],
-		actions: [{
-			action: 'record_start'
-		}],
-		release_actions: [{
-			action: 'record_stop'
-		}]
+		actions: [
+			{
+				action: 'record_start',
+			},
+		],
+		release_actions: [
+			{
+				action: 'record_stop',
+			},
+		],
 	})
-	/** 
+	/**
 	 * Stream
 	 */
 	presets.push({
@@ -77,7 +107,7 @@ exports.getPresets = function () {
 			text: 'Stream on',
 			size: '14',
 			color: foregroundColor,
-			bgcolor: backgroundColor
+			bgcolor: backgroundColor,
 		},
 		feedbacks: [
 			{
@@ -88,12 +118,14 @@ exports.getPresets = function () {
 				},
 			},
 		],
-		actions: [{
-			action: 'streaming',
-			options: {
-				force: "1"
-			}
-		}]
+		actions: [
+			{
+				action: 'streaming',
+				options: {
+					force: '1',
+				},
+			},
+		],
 	})
 	presets.push({
 		category: 'Basic',
@@ -103,7 +135,7 @@ exports.getPresets = function () {
 			text: 'Stream off',
 			size: '14',
 			color: foregroundColor,
-			bgcolor: backgroundColor
+			bgcolor: backgroundColor,
 		},
 		feedbacks: [
 			{
@@ -114,17 +146,19 @@ exports.getPresets = function () {
 				},
 			},
 		],
-		actions: [{
-			action: 'streaming',
-			options: {
-				force: "0"
-			}
-		}]
+		actions: [
+			{
+				action: 'streaming',
+				options: {
+					force: '0',
+				},
+			},
+		],
 	})
 
 	// create presets for all inputs
-	this.inputs.forEach(element => {
-		/** 
+	this.inputs.forEach((element) => {
+		/**
 		 * Source on PGM
 		 */
 		presets.push({
@@ -135,7 +169,7 @@ exports.getPresets = function () {
 				text: element.label,
 				size: '14',
 				color: foregroundColor,
-				bgcolor: backgroundColor
+				bgcolor: backgroundColor,
 			},
 			feedbacks: [
 				{
@@ -143,18 +177,20 @@ exports.getPresets = function () {
 					options: {
 						bg: this.rgb(255, 0, 0),
 						fg: this.rgb(0, 0, 0),
-						src: element.id
+						src: element.id,
 					},
 				},
 			],
-			actions: [{
-				action: 'source_pgm',
-				options: {
-					source: element.id
-				}
-			}]
+			actions: [
+				{
+					action: 'source_pgm',
+					options: {
+						source: element.id,
+					},
+				},
+			],
 		})
-		/** 
+		/**
 		 * Source on PVW
 		 */
 		presets.push({
@@ -165,7 +201,7 @@ exports.getPresets = function () {
 				text: element.label,
 				size: '14',
 				color: foregroundColor,
-				bgcolor: backgroundColor
+				bgcolor: backgroundColor,
 			},
 			feedbacks: [
 				{
@@ -173,18 +209,20 @@ exports.getPresets = function () {
 					options: {
 						bg: this.rgb(255, 255, 0),
 						fg: this.rgb(0, 0, 0),
-						src: element.id
+						src: element.id,
 					},
 				},
 			],
-			actions: [{
-				action: 'source_pvw',
-				options: {
-					source: element.id
-				}
-			}]
+			actions: [
+				{
+					action: 'source_pvw',
+					options: {
+						source: element.id,
+					},
+				},
+			],
 		})
-		/** 
+		/**
 		 * Source on ME/1
 		 */
 		presets.push({
@@ -195,19 +233,19 @@ exports.getPresets = function () {
 				text: element.label,
 				size: '14',
 				color: foregroundColor,
-				bgcolor: backgroundColor
+				bgcolor: backgroundColor,
 			},
-			actions: [{
-				action: 'source_to_v',
-				options: {
-					destination: 'v1_a_row',
-					source: element.id
-				}
-			}]
+			actions: [
+				{
+					action: 'source_to_v',
+					options: {
+						destination: 'v1_a_row',
+						source: element.id,
+					},
+				},
+			],
 		})
-	});
-	
-
+	})
 
 	return presets
 }

@@ -5,7 +5,7 @@
 
 ### Available Actions
 * Take
-* Auto transition
+* Auto transition (also on dsk)
 * Set Source to preview
 * Set Source to program
 * Set Source to V (ME)

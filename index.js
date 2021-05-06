@@ -437,7 +437,6 @@ class instance extends instance_skel {
 				this.setVariable('recording', element['$']['value'] == '1' ? true : false)
 				this.checkFeedbacks['tally_record']
 			} else if (element['$']['name'].match(/streaming_toggle/)) {
-				console.log("stream",element['$']['value']);
 				this.switcher['streaming'] = element['$']['value'] == '1' ? true : false
 				this.setVariable('streaming', element['$']['value'] == '1' ? true : false)
 				this.checkFeedbacks['tally_streaming']
@@ -453,7 +452,7 @@ class instance extends instance_skel {
 		})
 		this.checkFeedbacks('tally_PVW')
 		this.checkFeedbacks('tally_PGM')
-		this.checkFeedbacks("tally_streaming")
+		this.checkFeedbacks('tally_streaming')
 	}
 	/**
 	 * @param  {} data
@@ -619,9 +618,9 @@ class instance extends instance_skel {
 			case 'auto':
 				cmd = `<shortcuts><shortcut name="main_background_auto" /></shortcuts>`
 				break
-			// case 'macros':
-			// 	cmd = `<shortcuts><shortcut name="play_macro_byname"><entry key="name" value="${opt.macro}" /></shortcut></shortcuts>`;
-			// 	break;
+			case 'auto_dsk':
+				cmd = `<shortcuts><shortcut name="main_${opt.dsk}_auto" /></shortcuts>`
+				break
 			case 'streaming':
 				cmd = `<shortcuts><shortcut name="streaming_toggle" value="${opt.force}" /></shortcuts>`
 				this.switcher['streaming'] = opt.force == '1' ? true : false
@@ -659,8 +658,9 @@ class instance extends instance_skel {
 			case 'custom':
 				cmd = opt.custom
 				break
-			case 'macros':
-				this.system.emit('rest_get', `http://TriCasterIP/v1/trigger?name=${opt.macro}`, (err, res) => {
+			case 'trigger':
+				console.log(`http://${this.config.host}/v1/trigger?name=${opt.macro}`)
+				this.system.emit('rest_get', `http://${this.config.host}/v1/trigger?name=${opt.macro}`, (err, res) => {
 					console.log(res)
 				})
 				break
