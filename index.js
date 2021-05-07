@@ -97,6 +97,14 @@ class instance extends instance_skel {
 				id: `ddr${index}_forward`,
 				label: `ddr${index} Forward`,
 			})
+			this.mediaTargets.push({
+				id: `ddr${index}_mark_in`,
+				label: `ddr${index} Mark In`,
+			})
+			this.mediaTargets.push({
+				id: `ddr${index}_mark_out`,
+				label: `ddr${index} Mark Out`,
+			})
 		}
 		for (let index = 1; index < 3; index++) {
 			this.mediaTargets.push({
@@ -643,6 +651,9 @@ class instance extends instance_skel {
 			case 'media_target':
 				cmd = `<shortcuts><shortcut name="${opt.target}" /></shortcuts>`
 				break
+			case 'autoplay_mode_toggle':
+				cmd = `<shortcuts><shortcut name="${opt.target}_autoplay_mode_toggle" value="${opt.toggle}" /></shortcuts>`
+				break
 			case 'record_start':
 				cmd = `<shortcuts><shortcut name="record_start" /></shortcuts>`
 				break
@@ -654,6 +665,27 @@ class instance extends instance_skel {
 				break
 			case 'datalink':
 				cmd = `<shortcuts><shortcut name="set_datalink"><entry key="datalink_key" value="${opt.datalink_key}" /><entry key="datalink_value" value="${opt.datalink_value}"/></shortcut></shortcuts>`
+				break
+			case 'audio_volume':
+				cmd = `<shortcuts><shortcut name="${opt.source}_volume" value="${opt.volume}" /></shortcuts>`
+				break
+			case 'audio_mute':
+				cmd = `<shortcuts><shortcut name="${opt.source}_mute" value="${opt.mute}" /></shortcuts>`
+				break
+			case 'load_save_v':
+				cmd = `<shortcuts><shortcut name="${opt.v}${opt.loadSave}" value="${opt.preset}" /></shortcuts>`
+				break
+			case 'transition_speed_number':
+				cmd = `<shortcuts><shortcut name="main_background_speed" value="${opt.speed}" /></shortcuts>`
+				break
+			case 'transition_speed':
+				cmd = `<shortcuts><shortcut name="${opt.speed}" /></shortcuts>`
+				break
+			case 'transition_index':
+				cmd = `<shortcuts><shortcut name="main_background_select_index" value="${opt.type}" /></shortcuts>`
+				break
+			case 'previz_dsk_auto':
+				cmd = `<shortcuts><shortcut name="previz_${opt.dsk}_auto" /></shortcuts>`
 				break
 			case 'custom':
 				cmd = opt.custom
