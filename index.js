@@ -630,9 +630,10 @@ class instance extends instance_skel {
 				cmd = `<shortcuts><shortcut name="main_${opt.dsk}_auto" /></shortcuts>`
 				break
 			case 'streaming':
-				cmd = `<shortcuts><shortcut name="streaming_toggle" value="${opt.force}" /></shortcuts>`
+				cmd = `<shortcuts><shortcut name="streaming_toggle" value="${parseInt(opt.force)}" /></shortcuts>`
 				this.switcher['streaming'] = opt.force == '1' ? true : false
 				this.setVariable('streaming', opt.force == '1' ? true : false)
+				console.log(cmd);
 				break
 			case 'source_pgm':
 				cmd = `<shortcuts><shortcut name="main_a_row" value="${opt.source}" /></shortcuts>`
