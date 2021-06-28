@@ -380,14 +380,6 @@ class instance extends instance_skel {
 				})
 			})
 
-			// Catch "ECONNREFUSED" error and others
-			process.on('uncaughtException', (err) => {
-				if (err.errno === 'ECONNREFUSED') {
-					console.log('TCP error: ' + err)
-				} else {
-					console.log(err)
-				}
-			})
 		}
 	}
 
