@@ -347,11 +347,16 @@ class instance extends instance_skel {
 			this.socket.on('status_change', (status, message) => {
 				this.status(status, message) // Update status when something happens
 			})
-
 			this.socket.on('error', (err) => {
-				debug('Network error', err)
-				this.status(this.STATE_ERROR, err)
-				this.log('error', 'Network error: ' + err.message)
+				if (err.errno === 'ECONNREFUSED') {
+					this.log("TCP error: " + err);
+					this.status(this.STATE_ERROR, err)
+				}
+				else {
+					this.status(this.STATE_ERROR, err)
+					debug('Network error', err)
+					this.log('error', 'Network error: ' + err.message)
+				}
 			})
 
 			this.socket.on('connect', () => {
