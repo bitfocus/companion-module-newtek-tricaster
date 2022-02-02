@@ -19,5 +19,13 @@
 		"ping": "^0.4.0",
 		"util": "^0.12.3",
 		"xml2js": "^0.4.23"
+	},
+	"homepage": "https://github.com/bitfocus/companion-module-newtek-tricaster#readme",
+	"bugs": {
+		"url": "https://github.com/bitfocus/companion-module-newtek-tricaster/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bitfocus/companion-module-newtek-tricaster.git"
 	}
 }
