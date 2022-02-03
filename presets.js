@@ -79,9 +79,9 @@ exports.getPresets = function () {
 		feedbacks: [
 			{
 				type: 'tally_record',
-				options: {
-					bg: this.rgb(255, 0, 0),
-					fg: this.rgb(255, 255, 255),
+				style: {
+					bgcolor: this.rgb(255, 0, 0),
+					color: this.rgb(255, 255, 255),
 				},
 			},
 		],
@@ -112,9 +112,9 @@ exports.getPresets = function () {
 		feedbacks: [
 			{
 				type: 'tally_streaming',
-				options: {
-					bg: this.rgb(255, 0, 0),
-					fg: this.rgb(255, 255, 255),
+				style: {
+					bgcolor: this.rgb(255, 0, 0),
+					color: this.rgb(255, 255, 255),
 				},
 			},
 		],
@@ -140,9 +140,9 @@ exports.getPresets = function () {
 		feedbacks: [
 			{
 				type: 'tally_streaming',
-				options: {
-					bg: this.rgb(255, 0, 0),
-					fg: this.rgb(255, 255, 255),
+				style: {
+					bgcolor: this.rgb(255, 0, 0),
+					color: this.rgb(255, 255, 255),
 				},
 			},
 		],
@@ -175,9 +175,11 @@ exports.getPresets = function () {
 				{
 					type: 'tally_PGM',
 					options: {
-						bg: this.rgb(255, 0, 0),
-						fg: this.rgb(0, 0, 0),
 						src: element.id,
+					},
+					style: {
+						bgcolor: this.rgb(255, 0, 0),
+						color: this.rgb(255, 255, 255),
 					},
 				},
 			],
@@ -207,9 +209,11 @@ exports.getPresets = function () {
 				{
 					type: 'tally_PVW',
 					options: {
-						bg: this.rgb(255, 255, 0),
-						fg: this.rgb(0, 0, 0),
 						src: element.id,
+					},
+					style: {
+						bgcolor: this.rgb(0, 255, 0),
+						color: this.rgb(255, 255, 255),
 					},
 				},
 			],

@@ -3,33 +3,22 @@ const { resolve } = require('app-root-path')
 exports.initFeedbacks = function () {
 	const feedbacks = {}
 
-	const foregroundColor = {
-		type: 'colorpicker',
-		label: 'Foreground color',
-		id: 'fg',
-		default: this.rgb(255, 255, 255),
+	const feedbackColorPreview = {
+		color: this.rgb(255, 255, 255),
+		bgcolor: this.rgb(0, 255, 0),
 	}
 
-	const backgroundColorPreview = {
-		type: 'colorpicker',
-		label: 'Background color',
-		id: 'bg',
-		default: this.rgb(0, 255, 0),
-	}
-
-	const backgroundColorProgram = {
-		type: 'colorpicker',
-		label: 'Background color',
-		id: 'bg',
-		default: this.rgb(255, 0, 0),
+	const feedbackColorProgram = {
+		color: this.rgb(255, 255, 255),
+		bgcolor: this.rgb(255, 0, 0),
 	}
 
 	feedbacks.tally_PGM = {
-		label: 'Change color from program source',
-		description: 'When source is on-air, background color will change',
+		type: 'boolean',
+		label: 'Change style from program source',
+		description: 'When source is on-air, button style will change',
+		style: feedbackColorProgram,
 		options: [
-			foregroundColor,
-			backgroundColorProgram,
 			{
 				type: 'dropdown',
 				label: 'source',
@@ -41,11 +30,11 @@ exports.initFeedbacks = function () {
 	}
 
 	feedbacks.tally_PVW = {
-		label: 'Change color from preview source',
-		description: 'When source is on preview bus, background color will change',
+		type: 'boolean',
+		label: 'Change style from preview source',
+		description: 'When source is on preview bus, button style will change',
+		style: feedbackColorPreview,
 		options: [
-			foregroundColor,
-			backgroundColorPreview,
 			{
 				type: 'dropdown',
 				label: 'source',
@@ -57,23 +46,25 @@ exports.initFeedbacks = function () {
 	}
 
 	feedbacks.tally_record = {
-		label: 'Change color when recording',
-		description: 'When recording, background color will change',
-		options: [foregroundColor, backgroundColorProgram],
+		type: 'boolean',
+		label: 'Change style when recording',
+		description: 'When recording, button style will change',
+		style: feedbackColorProgram,
 	}
 
 	feedbacks.tally_streaming = {
-		label: 'Change color when streaming',
-		description: 'When streaming, background color will change',
-		options: [foregroundColor, backgroundColorProgram],
+		type: 'boolean',
+		label: 'Change style when streaming',
+		description: 'When streaming, button style will change',
+		style: feedbackColorProgram,
 	}
 
 	feedbacks.play_media = {
-		label: 'Change color when player is active',
-		description: 'When media state is on play, background color will change',
+		type: 'boolean',
+		label: 'Change style when player is active',
+		description: 'When media state is on play, button style will change',
+		style: feedbackColorProgram,
 		options: [
-			foregroundColor,
-			backgroundColorPreview,
 			{
 				type: 'dropdown',
 				label: 'target',
@@ -90,46 +81,33 @@ exports.initFeedbacks = function () {
 exports.executeFeedback = function (feedback, bank) {
 	if (feedback.type === 'tally_PGM') {
 		if (this.tallyPGM[feedback.options.src] == 'true') {
-			return {
-				color: feedback.options.fg,
-				bgcolor: feedback.options.bg,
-			}
+			return true
 		}
 	}
 
 	if (feedback.type === 'tally_PVW') {
 		if (this.tallyPVW[feedback.options.src] == 'true') {
-			return {
-				color: feedback.options.fg,
-				bgcolor: feedback.options.bg,
-			}
+			return true
 		}
 	}
 
 	if (feedback.type === 'tally_record') {
 		if (this.switcher['recording']) {
-			return {
-				color: feedback.options.fg,
-				bgcolor: feedback.options.bg,
-			}
+			return true
 		}
 	}
 
 	if (feedback.type === 'tally_streaming') {
 		if (this.switcher['streaming']) {
-			return {
-				color: feedback.options.fg,
-				bgcolor: feedback.options.bg,
-			}
+			return true
 		}
 	}
 
 	if (feedback.type === 'play_media') {
 		if (this.shortcut_states[feedback.options.target] == 'true') {
-			return {
-				color: feedback.options.fg,
-				bgcolor: feedback.options.bg,
-			}
+			return true
 		}
 	}
+
+	return false
 }

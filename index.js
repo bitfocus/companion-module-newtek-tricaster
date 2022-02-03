@@ -45,6 +45,18 @@ class instance extends instance_skel {
 		this.createMeDestinations()
 	}
 
+	static GetUpgradeScripts() {
+		return [
+			instance_skel.CreateConvertToBooleanFeedbackUpgradeScript({
+				'tally_PGM': true,
+				'tally_PVW': true,
+				'tally_record': true,
+				'tally_streaming': true,
+				'play_media': true,
+			})
+		]
+	}
+
 	createMeDestinations() {
 		for (let index = 1; index < 9; index++) {
 			this.meDestinations.push({
