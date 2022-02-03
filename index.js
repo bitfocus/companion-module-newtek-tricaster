@@ -440,11 +440,11 @@ class instance extends instance_skel {
 			} else if (element['$']['name'].match(/record_toggle/)) {
 				this.switcher['recording'] = element['$']['value'] == '1' ? true : false
 				this.setVariable('recording', element['$']['value'] == '1' ? true : false)
-				this.checkFeedbacks['tally_record']
+				this.checkFeedbacks('tally_record')
 			} else if (element['$']['name'].match(/streaming_toggle/)) {
 				this.switcher['streaming'] = element['$']['value'] == '1' ? true : false
 				this.setVariable('streaming', element['$']['value'] == '1' ? true : false)
-				this.checkFeedbacks['tally_streaming']
+				this.checkFeedbacks('tally_streaming')
 			} else if (
 				element['$']['name'].match(/ddr1_play/) ||
 				element['$']['name'].match(/ddr2_play/) ||
@@ -452,7 +452,7 @@ class instance extends instance_skel {
 				element['$']['name'].match(/ddr4_play/)
 			) {
 				this.shortcut_states[element['$']['name']] == element['$']['value']
-				this.checkFeedbacks['play_media']
+				this.checkFeedbacks('play_media')
 			}
 		})
 		this.checkFeedbacks('tally_PVW')
@@ -705,7 +705,7 @@ class instance extends instance_skel {
 		}
 		this.checkFeedbacks('tally_PGM')
 		this.checkFeedbacks('tally_PVW')
-		this.checkFeedbacks['tally_streaming']
+		this.checkFeedbacks('tally_streaming')
 	}
 }
 
