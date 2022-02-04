@@ -256,6 +256,10 @@ class instance extends instance_skel {
 		if (this.pollAPI) {
 			clearInterval(this.pollAPI)
 		}
+		if (this.ws !== undefined) {
+			this.ws.close(1000)
+			delete this.ws
+		}
 	}
 
 	/**
@@ -279,6 +283,7 @@ class instance extends instance_skel {
 			this.sendGetRequest(`http://${this.config.host}/v1/version`) // Fetch mixer info
 			this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial input info
 			this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
+			this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher changes
 			if (this.config.pollInterval != 0) {
 				this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalink stuff
 				if (this.pollAPI) {
@@ -390,7 +395,7 @@ class instance extends instance_skel {
 				this.socket.send(`<register name="NTK_states"/>\n`)
 
 				debug('TriCaster shortcut socket Opened')
-				// this.init_websocket_listener();
+				this.init_websocket_listener()
 			})
 
 			this.socket.on('data', (inputData) => {
@@ -412,6 +417,61 @@ class instance extends instance_skel {
 		}
 	}
 
+	init_websocket_listener() {
+		clearInterval(this.reconnect)
+
+		if (this.ws !== undefined) {
+			this.ws.close(1000)
+			delete this.ws
+		}
+
+		const url = 'ws://' + this.config.host + '/v1/change_notifications'
+		this.ws = new WebSocket(url)
+
+		this.ws.on('open', () => {
+			// ping server every 15 seconds to keep connection open
+
+			this.websocketPing = setInterval(() => {
+				if (this.ws) {
+					if (this.ws.readyState == 1) {
+						this.ws.send('keep alive')
+					}
+					// readyState 2 = CLOSING, readyState 3 = CLOSED
+					else if (this.ws.readyState == 2 || this.ws.readyState == 3 || this.ws) {
+						clearInterval(this.websocketPing)
+					}
+				} else {
+					clearInterval(this.websocketPing)
+				}
+			}, 15000)
+
+			this.debug('TriCaster Listener WebSocket Opened')
+		})
+
+		this.ws.on('message', (msg) => {
+			this.debug(msg)
+			if (msg.search('tally') != '-1') {
+				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch tally changes
+			}
+			if (msg.search('switcher') != '-1') {
+				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher changes
+			}
+		})
+
+		this.ws.on('onclose', () => {
+			if (code !== 1000) {
+				this.debug('error', `Websocket closed:  ${code}`)
+				this.reconnect = setInterval(() => {
+					this.init_websocket_listener()
+				}, 500)
+			}
+		})
+
+		this.ws.on('onerror', (msg) => {
+			this.debug('Error', msg.data)
+		})
+	}
+
 	/**
 	 * @param  {} states
 	 */
@@ -419,28 +479,22 @@ class instance extends instance_skel {
 		states.forEach((element) => {
 			if (element['$']['name'] == 'preview_tally') {
 				this.tallyPVW = []
-				let sourceNames = []
 				element['$']['value']
 					.toLowerCase()
 					.split('|')
 					.forEach((element2) => {
 						const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
 						if (index != -1) this.tallyPVW[this.inputs[index].id] = 'true'
-						sourceNames.push(this.inputs[index]?.short_name)
 					})
-				this.setVariable('pvw_source', sourceNames.join('\\n'))
 			} else if (element['$']['name'] == 'program_tally') {
 				this.tallyPGM = []
-				let sourceNames = []
 				element['$']['value']
 					.toLowerCase()
 					.split('|')
 					.forEach((element2) => {
 						const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
 						if (index != -1) this.tallyPGM[this.inputs[index].id] = 'true'
-						sourceNames.push(this.inputs[index]?.short_name)
 					})
-				this.setVariable('pgm_source', sourceNames.join('\\n'))
 			} else if (element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11))
 				if (index != -1) {
@@ -550,6 +604,7 @@ class instance extends instance_skel {
 	 * @param  {} data
 	 */
 	processData(data) {
+		this.debug(data)
 		if (data['tally'] !== undefined) {
 			// Set PGM and PVW variable/Feedback
 			if (this.inputs.length == 0) {
@@ -593,6 +648,21 @@ class instance extends instance_skel {
 				this.inputs[counter]['label'] = element['$']['button_label']
 				counter++
 			})
+			let pgmSource = data['switcher_update']['$']['main_source']
+			let pvwSource = data['switcher_update']['$']['preview_source']
+
+			pgmSource = this.inputs.find((el) => el.name == pgmSource.toLowerCase())
+			pvwSource = this.inputs.find((el) => el.name == pvwSource.toLowerCase())
+
+			this.setVariable(
+				'pgm_source',
+				pgmSource?.short_name ? pgmSource.short_name : data['switcher_update']['$']['main_source']
+			)
+			this.setVariable(
+				'pvw_source',
+				pvwSource?.short_name ? pvwSource.short_name : data['switcher_update']['$']['main_source']
+			)
+
 			this.actions() // Set the actions after info is retrieved
 			this.init_feedbacks() // Same for feedback as it holds the inputs
 			this.init_presets()
