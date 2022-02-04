@@ -11,10 +11,10 @@ module.exports = {
 					label: 'Choose dsk',
 					type: 'dropdown',
 					choices: [
-						{ id: 'dsk1', label: 'dsk 1' },
-						{ id: 'dsk2', label: 'dsk 2' },
-						{ id: 'dsk3', label: 'dsk 3' },
-						{ id: 'dsk4', label: 'dsk 4' },
+						{ id: 'dsk1', label: 'DSK 1' },
+						{ id: 'dsk2', label: 'DSK 2' },
+						{ id: 'dsk3', label: 'DSK 3' },
+						{ id: 'dsk4', label: 'DSK 4' },
 					],
 					id: 'dsk',
 					default: 'dsk1',
@@ -105,7 +105,7 @@ module.exports = {
 			],
 		}
 		actions['source_to_dsk'] = {
-			label: 'Set source to dsk',
+			label: 'Set source to DSK',
 			options: [
 				{
 					label: 'Destination',
@@ -143,10 +143,10 @@ module.exports = {
 					type: 'dropdown',
 					id: 'target',
 					choices: [
-						{ id: 'ddr1', label: 'ddr 1' },
-						{ id: 'ddr2', label: 'ddr 2' },
-						{ id: 'ddr3', label: 'ddr 3' },
-						{ id: 'ddr4', label: 'ddr 4' },
+						{ id: 'ddr1', label: 'DDR 1' },
+						{ id: 'ddr2', label: 'DDR 2' },
+						{ id: 'ddr3', label: 'DDR 3' },
+						{ id: 'ddr4', label: 'DDR 4' },
 					],
 					default: 'ddr1',
 				},
@@ -163,16 +163,16 @@ module.exports = {
 			],
 		}
 		actions['datalink'] = {
-			label: 'Set datalink key value',
+			label: 'Set DataLink key value',
 			options: [
 				{
-					label: 'Datalink Key',
+					label: 'DataLink Key',
 					type: 'textinput',
 					id: 'datalink_key',
 					width: 6,
 				},
 				{
-					label: 'Datalink Value',
+					label: 'DataLink Value',
 					type: 'textinput',
 					id: 'datalink_value',
 					width: 6,
@@ -187,10 +187,10 @@ module.exports = {
 					type: 'dropdown',
 					id: 'source',
 					choices: [
-						{ id: 'ddr1', label: 'ddr 1' },
-						{ id: 'ddr2', label: 'ddr 2' },
-						{ id: 'ddr3', label: 'ddr 3' },
-						{ id: 'ddr4', label: 'ddr 4' },
+						{ id: 'ddr1', label: 'DDR 1' },
+						{ id: 'ddr2', label: 'DDR 2' },
+						{ id: 'ddr3', label: 'DDR 3' },
+						{ id: 'ddr4', label: 'DDR 4' },
 						{ id: 'sound', label: 'Sound' },
 						{ id: 'effects', label: 'Effects' },
 					],
@@ -214,10 +214,10 @@ module.exports = {
 					type: 'dropdown',
 					id: 'source',
 					choices: [
-						{ id: 'ddr1', label: 'ddr 1' },
-						{ id: 'ddr2', label: 'ddr 2' },
-						{ id: 'ddr3', label: 'ddr 3' },
-						{ id: 'ddr4', label: 'ddr 4' },
+						{ id: 'ddr1', label: 'DDR 1' },
+						{ id: 'ddr2', label: 'DDR 2' },
+						{ id: 'ddr3', label: 'DDR 3' },
+						{ id: 'ddr4', label: 'DDR 4' },
 						{ id: 'sound', label: 'Sound' },
 						{ id: 'effects', label: 'Effects' },
 					],
@@ -332,10 +332,10 @@ module.exports = {
 					label: 'Choose dsk',
 					type: 'dropdown',
 					choices: [
-						{ id: 'dsk1', label: 'dsk 1' },
-						{ id: 'dsk2', label: 'dsk 2' },
-						{ id: 'dsk3', label: 'dsk 3' },
-						{ id: 'dsk4', label: 'dsk 4' },
+						{ id: 'dsk1', label: 'DSK 1' },
+						{ id: 'dsk2', label: 'DSK 2' },
+						{ id: 'dsk3', label: 'DSK 3' },
+						{ id: 'dsk4', label: 'DSK 4' },
 					],
 					id: 'dsk',
 					default: 'dsk1',

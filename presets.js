@@ -251,5 +251,80 @@ exports.getPresets = function () {
 		})
 	})
 
+	this.mediaSourceNames.forEach((source) => {
+		/**
+		 * Source on PGM
+		 */
+		presets.push({
+			category: 'Media Players',
+			label: `${source.label} Toggle Play`,
+			bank: {
+				style: 'text',
+				text: `${source.label} Toggle Play`,
+				size: '14',
+				color: foregroundColor,
+				bgcolor: backgroundColor,
+			},
+			feedbacks: [
+				{
+					type: 'play_media',
+					options: {
+						target: `${source.id}_play`,
+					},
+					style: {
+						bgcolor: this.rgb(0, 255, 0),
+						color: this.rgb(255, 255, 255),
+					},
+				},
+			],
+			actions: [
+				{
+					action: 'media_target',
+					options: {
+						target: `${source.id}_play_toggle`,
+					},
+				},
+			],
+		})
+		presets.push({
+			category: 'Media Players',
+			label: `${source.label} Back`,
+			bank: {
+				style: 'text',
+				text: `${source.label} Back`,
+				size: '14',
+				color: foregroundColor,
+				bgcolor: backgroundColor,
+			},
+			actions: [
+				{
+					action: 'media_target',
+					options: {
+						target: `${source.id}_back`,
+					},
+				},
+			],
+		})
+		presets.push({
+			category: 'Media Players',
+			label: `${source.label} Forward`,
+			bank: {
+				style: 'text',
+				text: `${source.label} Forward`,
+				size: '14',
+				color: foregroundColor,
+				bgcolor: backgroundColor,
+			},
+			actions: [
+				{
+					action: 'media_target',
+					options: {
+						target: `${source.id}_forward`,
+					},
+				},
+			],
+		})
+	})
+
 	return presets
 }

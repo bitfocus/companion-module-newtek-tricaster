@@ -59,6 +59,15 @@ exports.initFeedbacks = function () {
 		style: feedbackColorProgram,
 	}
 
+	let playMediaChoices = []
+
+	this.mediaSourceNames.forEach((source) => {
+		playMediaChoices.push({
+			id: `${source.id}_play`,
+			label: `${source.label}`,
+		})
+	})
+
 	feedbacks.play_media = {
 		type: 'boolean',
 		label: 'Change style when player is active',
@@ -69,7 +78,7 @@ exports.initFeedbacks = function () {
 				type: 'dropdown',
 				label: 'Media Player',
 				id: 'target',
-				choices: this.mediaSourceNames,
+				choices: playMediaChoices,
 				default: 'ddr1_play',
 			},
 		],

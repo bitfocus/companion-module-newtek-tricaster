@@ -119,7 +119,7 @@ class instance extends instance_skel {
 				label: `DDR ${index} Mark Out`,
 			})
 			this.mediaSourceNames.push({
-				id: `ddr${index}_play`,
+				id: `ddr${index}`,
 				label: `DDR ${index}`,
 			})
 		}
@@ -145,7 +145,7 @@ class instance extends instance_skel {
 				label: `GFX ${index} Forward`,
 			})
 			this.mediaSourceNames.push({
-				id: `gfx${index}_play`,
+				id: `gfx${index}`,
 				label: `GFX ${index}`,
 			})
 		}
@@ -154,7 +154,7 @@ class instance extends instance_skel {
 			label: `Stills Play`,
 		})
 		this.mediaSourceNames.push({
-			id: `stills_play`,
+			id: `stills`,
 			label: `Stills`,
 		})
 		this.mediaTargets.push({
@@ -195,11 +195,11 @@ class instance extends instance_skel {
 			label: `Titles Forward`,
 		})
 		this.mediaSourceNames.push({
-			id: `titles_play`,
+			id: `titles`,
 			label: `Titles`,
 		})
 		this.mediaSourceNames.push({
-			id: `sound_play`,
+			id: `sound`,
 			label: `Sound`,
 		})
 	}
