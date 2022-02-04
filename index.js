@@ -48,12 +48,12 @@ class instance extends instance_skel {
 	static GetUpgradeScripts() {
 		return [
 			instance_skel.CreateConvertToBooleanFeedbackUpgradeScript({
-				'tally_PGM': true,
-				'tally_PVW': true,
-				'tally_record': true,
-				'tally_streaming': true,
-				'play_media': true,
-			})
+				tally_PGM: true,
+				tally_PVW: true,
+				tally_record: true,
+				tally_streaming: true,
+				play_media: true,
+			}),
 		]
 	}
 
@@ -197,29 +197,22 @@ class instance extends instance_skel {
 			{
 				type: 'textinput',
 				id: 'host',
-				label: 'Target IP',
+				label: 'Tricaster IP',
 				width: 6,
 				regex: this.REGEX_IP,
 			},
 			{
 				type: 'text',
 				id: 'info',
-				width: 12,
-				label: 'Information',
-				value: 'We use polling to fetch datalink key/value pairs, see variables below for the values',
-			},
-			{
-				type: 'text',
-				id: 'info',
 				width: 10,
-				label: 'Information',
-				value: 'Put the polling interval in milliseconds here, 0 for off, minimal 500ms interval',
+				label: 'Polling Information',
+				value: 'Polling is required for DataLink variables (0 for off, interval must be 500ms or larger)',
 			},
 			{
 				type: 'textinput',
 				id: 'pollInterval',
-				label: 'Polling interval (0 for off)',
-				width: 2,
+				label: 'Polling Interval',
+				width: 4,
 				default: '0',
 			},
 		]
@@ -361,10 +354,9 @@ class instance extends instance_skel {
 			})
 			this.socket.on('error', (err) => {
 				if (err.errno === 'ECONNREFUSED') {
-					this.log("TCP error: " + err);
+					this.log('TCP error: ' + err)
 					this.status(this.STATE_ERROR, err)
-				}
-				else {
+				} else {
 					this.status(this.STATE_ERROR, err)
 					debug('Network error', err)
 					this.log('error', 'Network error: ' + err.message)
@@ -373,7 +365,7 @@ class instance extends instance_skel {
 
 			this.socket.on('connect', () => {
 				this.status(this.STATE_OK)
-				// Ask the mixer to give us variable (register/state) updates on connectc
+				// Ask the mixer to give us variable (register/state) updates on connection
 				this.socket.send(`<register name="NTK_states"/>\n`)
 
 				debug('TriCaster shortcut socket Opened')
@@ -396,7 +388,6 @@ class instance extends instance_skel {
 					}
 				})
 			})
-
 		}
 	}
 
@@ -514,11 +505,11 @@ class instance extends instance_skel {
 					this.processData(result.data)
 				} else if (result.response.statusCode == 401) {
 					// mmm password?
-					this.status(this.STATUS_ERROR, 'Password needed?')
-					this.log('error', 'Password? HTTP status code: ' + result.response.statusCode)
+					this.status(this.STATUS_ERROR)
+					this.log('error', 'On the Tricaster under Administration Tools, turn off the LivePanel password')
 				} else {
-					this.status(this.STATUS_ERROR, 'Unespected HTTP status code: ' + result.response.statusCode)
-					this.log('error', 'Unespected HTTP status code: ' + result.response.statusCode)
+					this.status(this.STATUS_ERROR, 'Unexpected HTTP status code: ' + result.response.statusCode)
+					this.log('error', 'Unexpected HTTP status code: ' + result.response.statusCode)
 				}
 			}
 		})
@@ -642,7 +633,7 @@ class instance extends instance_skel {
 				cmd = `<shortcuts><shortcut name="streaming_toggle" value="${parseInt(opt.force)}" /></shortcuts>`
 				this.switcher['streaming'] = opt.force == '1' ? true : false
 				this.setVariable('streaming', opt.force == '1' ? true : false)
-				console.log(cmd);
+				console.log(cmd)
 				break
 			case 'source_pgm':
 				cmd = `<shortcuts><shortcut name="main_a_row" value="${opt.source}" /></shortcuts>`
