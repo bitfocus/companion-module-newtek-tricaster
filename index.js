@@ -394,7 +394,7 @@ class instance extends instance_skel {
 				// Ask the mixer to give us variable (register/state) updates on connection
 				this.socket.send(`<register name="NTK_states"/>\n`)
 
-				debug('TriCaster shortcut socket Opened')
+				this.debug('TriCaster shortcut socket Opened')
 				this.init_websocket_listener()
 			})
 
@@ -478,23 +478,7 @@ class instance extends instance_skel {
 	shortcutStatesIngest(states) {
 		states.forEach((element) => {
 			if (element['$']['name'] == 'preview_tally') {
-				this.tallyPVW = []
-				element['$']['value']
-					.toLowerCase()
-					.split('|')
-					.forEach((element2) => {
-						const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
-						if (index != -1) this.tallyPVW[this.inputs[index].id] = 'true'
-					})
 			} else if (element['$']['name'] == 'program_tally') {
-				this.tallyPGM = []
-				element['$']['value']
-					.toLowerCase()
-					.split('|')
-					.forEach((element2) => {
-						const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
-						if (index != -1) this.tallyPGM[this.inputs[index].id] = 'true'
-					})
 			} else if (element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11))
 				if (index != -1) {
@@ -561,7 +545,7 @@ class instance extends instance_skel {
 			this.actions()
 			this.init_presets()
 		} else {
-			console.log('UNKNOWN INCOMING DATA', util.inspect(data, false, null, true))
+			this.debug('UNKNOWN INCOMING DATA', util.inspect(data, false, null, true))
 		}
 	}
 
@@ -578,7 +562,7 @@ class instance extends instance_skel {
 	 * @param  {} url
 	 */
 	sendGetRequest(url) {
-		debug('Requesting the following url:', url)
+		this.debug('Requesting the following url:', url)
 		this.system.emit('rest_get', url, (err, result) => {
 			if (err !== null) {
 				this.status(this.STATUS_ERROR, result.error.code)
@@ -604,12 +588,13 @@ class instance extends instance_skel {
 	 * @param  {} data
 	 */
 	processData(data) {
-		this.debug(data)
 		if (data['tally'] !== undefined) {
 			// Set PGM and PVW variable/Feedback
+			this.tallyPVW = []
+			this.tallyPGM = []
 			if (this.inputs.length == 0) {
 				let variables = []
-				console.log('Load initial Data')
+				this.debug('Load initial Data')
 				data['tally']['column'].forEach((element) => {
 					//Prevent excess DDR/GFX A/B Inputs from being visible
 					if (!element['$']['name'].match(/[d,g][d,f][r,x][1-2](_)[a,b]/i)) {
@@ -620,18 +605,21 @@ class instance extends instance_skel {
 							long_name: element['$']['name'],
 							short_name: element['$']['name'],
 						})
-						element['$']['on_prev'] == 'true'
-							? (this.tallyPVW[element['$']['index']] = 'true')
-							: (this.tallyPVW[element['$']['index']] = 'false')
-						element['$']['on_pgm'] == 'true'
-							? (this.tallyPGM[element['$']['index']] = 'true')
-							: (this.tallyPGM[element['$']['index']] = 'false;')
 						variables.push({ name: `${element['$']['name']}`, label: element['$']['name'] })
 					}
 				})
 				this.set_variablesDefinition(variables)
+				this.init_feedbacks() // Same for feedback as it holds the inputs
 			}
-			this.init_feedbacks() // Same for feedback as it holds the inputs
+			data['tally']['column'].forEach((element) => {
+				element['$']['on_prev'] == 'true'
+					? (this.tallyPVW[element['$']['index']] = 'true')
+					: (this.tallyPVW[element['$']['index']] = 'false')
+				element['$']['on_pgm'] == 'true'
+					? (this.tallyPGM[element['$']['index']] = 'true')
+					: (this.tallyPGM[element['$']['index']] = 'false')
+			})
+
 			this.checkFeedbacks('tally_PGM') // Check directly, which source is active
 			this.checkFeedbacks('tally_PVW') // Check directly, which source is on preview
 		} else if (data['product_information'] !== undefined) {
@@ -642,12 +630,6 @@ class instance extends instance_skel {
 			this.setVariable('product_name', data['product_information']['product_name'])
 			this.setVariable('product_version', data['product_information']['product_version'])
 		} else if (data['switcher_update'] !== undefined) {
-			// Update list with names
-			let counter = 0
-			data['switcher_update']['inputs']['physical_input'].forEach((element) => {
-				this.inputs[counter]['label'] = element['$']['button_label']
-				counter++
-			})
 			let pgmSource = data['switcher_update']['$']['main_source']
 			let pvwSource = data['switcher_update']['$']['preview_source']
 
@@ -660,7 +642,7 @@ class instance extends instance_skel {
 			)
 			this.setVariable(
 				'pvw_source',
-				pvwSource?.short_name ? pvwSource.short_name : data['switcher_update']['$']['main_source']
+				pvwSource?.short_name ? pvwSource.short_name : data['switcher_update']['$']['preview_source']
 			)
 
 			this.actions() // Set the actions after info is retrieved
@@ -692,7 +674,7 @@ class instance extends instance_skel {
 			this.datalink = _datalink
 			this.set_variablesDefinition(variables)
 		} else {
-			// console.log('data from request',data);
+			// this.debug('data from request',data);
 		}
 	}
 
@@ -736,7 +718,7 @@ class instance extends instance_skel {
 				cmd = `<shortcuts><shortcut name="streaming_toggle" value="${parseInt(opt.force)}" /></shortcuts>`
 				this.switcher['streaming'] = opt.force == '1' ? true : false
 				this.setVariable('streaming', opt.force == '1' ? true : false)
-				console.log(cmd)
+				this.debug(cmd)
 				break
 			case 'source_pgm':
 				cmd = `<shortcuts><shortcut name="main_a_row" value="${opt.source}" /></shortcuts>`
@@ -795,9 +777,9 @@ class instance extends instance_skel {
 				cmd = opt.custom
 				break
 			case 'trigger':
-				console.log(`http://${this.config.host}/v1/trigger?name=${opt.macro}`)
+				this.debug(`http://${this.config.host}/v1/trigger?name=${opt.macro}`)
 				this.system.emit('rest_get', `http://${this.config.host}/v1/trigger?name=${opt.macro}`, (err, res) => {
-					console.log(res)
+					this.debug(res)
 				})
 				break
 		}
@@ -805,7 +787,7 @@ class instance extends instance_skel {
 		if (cmd !== '') {
 			// send the xml to TCP socket
 			this.socket.send(cmd + '\n')
-			// console.log(cmd)
+			// this.debug(cmd)
 		} else {
 			// mmm do matching action found?
 		}
