@@ -26,18 +26,18 @@ Allows you to control the Tricaster line of video production switchers from NewT
 
 ### Available Feedbacks
 
-- Tally feedback for sources on program and preview
-- Media feedback (under construction)
+- Source Tally (Program and Preview)
+- Media Playing (DDRs, GFX, Stills, Titles, Sound)
 - Record
 - Stream
 
 ### Available Variables
 
-- Product name
-- Product version
-- Source on program
-- Source on preview
-- All inputs
+- Product Name
+- Product Version
+- Source on Program
+- Source on Preview
+- Input Names
 - All DataLink key/value pairs _Note: must enable polling in the module settings_
 
 ### Available Presets
@@ -47,5 +47,5 @@ Allows you to control the Tricaster line of video production switchers from NewT
 - Sources to V1
 - Take
 - Auto
-- Record toggle
+- Record Toggle
 - Streaming

@@ -21,7 +21,7 @@ exports.initFeedbacks = function () {
 		options: [
 			{
 				type: 'dropdown',
-				label: 'source',
+				label: 'Source',
 				id: 'src',
 				choices: this.inputs,
 				default: 0,
@@ -37,7 +37,7 @@ exports.initFeedbacks = function () {
 		options: [
 			{
 				type: 'dropdown',
-				label: 'source',
+				label: 'Source',
 				id: 'src',
 				choices: this.inputs,
 				default: 0,
@@ -63,14 +63,14 @@ exports.initFeedbacks = function () {
 		type: 'boolean',
 		label: 'Change style when player is active',
 		description: 'When media state is on play, button style will change',
-		style: feedbackColorProgram,
+		style: feedbackColorPreview,
 		options: [
 			{
 				type: 'dropdown',
-				label: 'target',
+				label: 'Media Player',
 				id: 'target',
-				choices: this.mediaTargets,
-				default: 'ddr1',
+				choices: this.mediaSourceNames,
+				default: 'ddr1_play',
 			},
 		],
 	}

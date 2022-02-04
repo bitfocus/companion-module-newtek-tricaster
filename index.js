@@ -38,6 +38,7 @@ class instance extends instance_skel {
 		this.shortcut_states = []
 		this.variables = []
 		this.mediaTargets = []
+		this.mediaSourceNames = []
 		this.meDestinations = []
 		this.dskDestinations = []
 		this.createDskDestinations()
@@ -117,6 +118,10 @@ class instance extends instance_skel {
 				id: `ddr${index}_mark_out`,
 				label: `ddr${index} Mark Out`,
 			})
+			this.mediaSourceNames.push({
+				id: `ddr${index}_play`,
+				label: `DDR ${index}`,
+			})
 		}
 		for (let index = 1; index < 3; index++) {
 			this.mediaTargets.push({
@@ -139,10 +144,18 @@ class instance extends instance_skel {
 				id: `gfx${index}_forward`,
 				label: `gfx${index} Forward`,
 			})
+			this.mediaSourceNames.push({
+				id: `gfx${index}_play`,
+				label: `GFX ${index}`,
+			})
 		}
 		this.mediaTargets.push({
 			id: `stills_play`,
 			label: `stills Play`,
+		})
+		this.mediaSourceNames.push({
+			id: `stills_play`,
+			label: `Stills`,
 		})
 		this.mediaTargets.push({
 			id: `stills_play_toggle`,
@@ -180,6 +193,14 @@ class instance extends instance_skel {
 		this.mediaTargets.push({
 			id: `titles_forward`,
 			label: `titles Forward`,
+		})
+		this.mediaSourceNames.push({
+			id: `titles_play`,
+			label: `Titles`,
+		})
+		this.mediaSourceNames.push({
+			id: `sound_play`,
+			label: `Sound`,
 		})
 	}
 	/**
@@ -456,9 +477,14 @@ class instance extends instance_skel {
 				element['$']['name'].match(/ddr1_play/) ||
 				element['$']['name'].match(/ddr2_play/) ||
 				element['$']['name'].match(/ddr3_play/) ||
-				element['$']['name'].match(/ddr4_play/)
+				element['$']['name'].match(/ddr4_play/) ||
+				element['$']['name'].match(/gfx1_play/) ||
+				element['$']['name'].match(/gfx2_play/) ||
+				element['$']['name'].match(/stills_play/) ||
+				element['$']['name'].match(/titles_play/) ||
+				element['$']['name'].match(/sound_play/)
 			) {
-				this.shortcut_states[element['$']['name']] == element['$']['value']
+				this.shortcut_states[element['$']['name']] = element['$']['value']
 				this.checkFeedbacks('play_media')
 			}
 		})
