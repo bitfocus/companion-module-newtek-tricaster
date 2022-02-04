@@ -62,16 +62,16 @@ class instance extends instance_skel {
 		for (let index = 1; index < 9; index++) {
 			this.meDestinations.push({
 				id: `v${index}_a_row`,
-				label: `v${index} a bus`,
+				label: `M/E ${index} PGM`,
 			})
 			this.meDestinations.push({
 				id: `v${index}_b_row`,
-				label: `v${index} b bus`,
+				label: `M/E ${index} PVW`,
 			})
 			for (let dsk = 1; dsk < 5; dsk++) {
 				this.dskDestinations.push({
 					id: `v${index}_dsk${dsk}`,
-					label: `v${index} dsk ${dsk}`,
+					label: `M/E ${index} DSK ${dsk}`,
 				})
 			}
 		}
@@ -92,31 +92,31 @@ class instance extends instance_skel {
 		for (let index = 1; index < 5; index++) {
 			this.mediaTargets.push({
 				id: `ddr${index}_play`,
-				label: `ddr${index} Play`,
+				label: `DDR ${index} Play`,
 			})
 			this.mediaTargets.push({
 				id: `ddr${index}_play_toggle`,
-				label: `ddr${index} Play Toggle`,
+				label: `DDR ${index} Play Toggle`,
 			})
 			this.mediaTargets.push({
 				id: `ddr${index}_stop`,
-				label: `ddr${index} Stop`,
+				label: `DDR ${index} Stop`,
 			})
 			this.mediaTargets.push({
 				id: `ddr${index}_back`,
-				label: `ddr${index} Back`,
+				label: `DDR ${index} Back`,
 			})
 			this.mediaTargets.push({
 				id: `ddr${index}_forward`,
-				label: `ddr${index} Forward`,
+				label: `DDR ${index} Forward`,
 			})
 			this.mediaTargets.push({
 				id: `ddr${index}_mark_in`,
-				label: `ddr${index} Mark In`,
+				label: `DDR ${index} Mark In`,
 			})
 			this.mediaTargets.push({
 				id: `ddr${index}_mark_out`,
-				label: `ddr${index} Mark Out`,
+				label: `DDR ${index} Mark Out`,
 			})
 			this.mediaSourceNames.push({
 				id: `ddr${index}_play`,
@@ -126,23 +126,23 @@ class instance extends instance_skel {
 		for (let index = 1; index < 3; index++) {
 			this.mediaTargets.push({
 				id: `gfx${index}_play`,
-				label: `gfx${index} Play`,
+				label: `GFX ${index} Play`,
 			})
 			this.mediaTargets.push({
 				id: `gfx${index}_play_toggle`,
-				label: `gfx${index} Play Toggle`,
+				label: `GFX ${index} Play Toggle`,
 			})
 			this.mediaTargets.push({
 				id: `gfx${index}_stop`,
-				label: `gfx${index} Stop`,
+				label: `GFX ${index} Stop`,
 			})
 			this.mediaTargets.push({
 				id: `gfx${index}_back`,
-				label: `gfx${index} Back`,
+				label: `GFX ${index} Back`,
 			})
 			this.mediaTargets.push({
 				id: `gfx${index}_forward`,
-				label: `gfx${index} Forward`,
+				label: `GFX ${index} Forward`,
 			})
 			this.mediaSourceNames.push({
 				id: `gfx${index}_play`,
@@ -151,7 +151,7 @@ class instance extends instance_skel {
 		}
 		this.mediaTargets.push({
 			id: `stills_play`,
-			label: `stills Play`,
+			label: `Stills Play`,
 		})
 		this.mediaSourceNames.push({
 			id: `stills_play`,
@@ -159,40 +159,40 @@ class instance extends instance_skel {
 		})
 		this.mediaTargets.push({
 			id: `stills_play_toggle`,
-			label: `stills Play Toggle`,
+			label: `Stills Play Toggle`,
 		})
 		this.mediaTargets.push({
 			id: `stills_stop`,
-			label: `stills Stop`,
+			label: `Stills Stop`,
 		})
 		this.mediaTargets.push({
 			id: `stills_back`,
-			label: `stills Back`,
+			label: `Stills Back`,
 		})
 		this.mediaTargets.push({
 			id: `stills_forward`,
-			label: `stills Forward`,
+			label: `Stills Forward`,
 		})
 
 		this.mediaTargets.push({
 			id: `titles_play`,
-			label: `titles Play`,
+			label: `Titles Play`,
 		})
 		this.mediaTargets.push({
 			id: `titles_play_toggle`,
-			label: `titles Play Toggle`,
+			label: `Titles Play Toggle`,
 		})
 		this.mediaTargets.push({
 			id: `titles_stop`,
-			label: `titles Stop`,
+			label: `Titles Stop`,
 		})
 		this.mediaTargets.push({
 			id: `titles_back`,
-			label: `titles Back`,
+			label: `Titles Back`,
 		})
 		this.mediaTargets.push({
 			id: `titles_forward`,
-			label: `titles Forward`,
+			label: `Titles Forward`,
 		})
 		this.mediaSourceNames.push({
 			id: `titles_play`,
@@ -556,20 +556,23 @@ class instance extends instance_skel {
 				let variables = []
 				console.log('Load initial Data')
 				data['tally']['column'].forEach((element) => {
-					this.inputs.push({
-						id: element['$']['index'],
-						label: element['$']['name'],
-						name: element['$']['name'],
-						long_name: element['$']['name'],
-						short_name: element['$']['name'],
-					})
-					element['$']['on_prev'] == 'true'
-						? (this.tallyPVW[element['$']['index']] = 'true')
-						: (this.tallyPVW[element['$']['index']] = 'false')
-					element['$']['on_pgm'] == 'true'
-						? (this.tallyPGM[element['$']['index']] = 'true')
-						: (this.tallyPGM[element['$']['index']] = 'false;')
-					variables.push({ name: `${element['$']['name']}`, label: element['$']['name'] })
+					//Prevent excess DDR/GFX A/B Inputs from being visible
+					if (!element['$']['name'].match(/[d,g][d,f][r,x][1-2](_)[a,b]/i)) {
+						this.inputs.push({
+							id: element['$']['index'],
+							label: element['$']['name'],
+							name: element['$']['name'],
+							long_name: element['$']['name'],
+							short_name: element['$']['name'],
+						})
+						element['$']['on_prev'] == 'true'
+							? (this.tallyPVW[element['$']['index']] = 'true')
+							: (this.tallyPVW[element['$']['index']] = 'false')
+						element['$']['on_pgm'] == 'true'
+							? (this.tallyPGM[element['$']['index']] = 'true')
+							: (this.tallyPGM[element['$']['index']] = 'false;')
+						variables.push({ name: `${element['$']['name']}`, label: element['$']['name'] })
+					}
 				})
 				this.set_variablesDefinition(variables)
 			}

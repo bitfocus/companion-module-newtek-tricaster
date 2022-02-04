@@ -86,7 +86,7 @@ module.exports = {
 			],
 		}
 		actions['source_to_v'] = {
-			label: 'Set source to V',
+			label: 'Set source to M/E',
 			options: [
 				{
 					label: 'Destination',

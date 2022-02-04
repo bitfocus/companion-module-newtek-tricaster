@@ -104,7 +104,7 @@ exports.getPresets = function () {
 		label: 'STREAM',
 		bank: {
 			style: 'text',
-			text: 'Stream on',
+			text: 'Stream On',
 			size: '14',
 			color: foregroundColor,
 			bgcolor: backgroundColor,
@@ -132,7 +132,7 @@ exports.getPresets = function () {
 		label: 'STREAM',
 		bank: {
 			style: 'text',
-			text: 'Stream off',
+			text: 'Stream Off',
 			size: '14',
 			color: foregroundColor,
 			bgcolor: backgroundColor,
@@ -230,7 +230,7 @@ exports.getPresets = function () {
 		 * Source on ME/1
 		 */
 		presets.push({
-			category: 'Source on V1',
+			category: 'Source on M/E 1',
 			label: element.label,
 			bank: {
 				style: 'text',

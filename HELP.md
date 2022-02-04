@@ -44,7 +44,7 @@ Allows you to control the Tricaster line of video production switchers from NewT
 
 - Sources to PGM
 - Sources to PVW
-- Sources to V1
+- Sources to M/E 1
 - Take
 - Auto
 - Record Toggle
