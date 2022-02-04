@@ -398,24 +398,28 @@ class instance extends instance_skel {
 		states.forEach((element) => {
 			if (element['$']['name'] == 'preview_tally') {
 				this.tallyPVW = []
-				this.setVariable('pvw_source', element['$']['value'].toLowerCase().split('|'))
+				let sourceNames = []
 				element['$']['value']
 					.toLowerCase()
 					.split('|')
 					.forEach((element2) => {
 						const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
 						if (index != -1) this.tallyPVW[this.inputs[index].id] = 'true'
+						sourceNames.push(this.inputs[index]?.short_name)
 					})
+				this.setVariable('pvw_source', sourceNames.join('\\n'))
 			} else if (element['$']['name'] == 'program_tally') {
 				this.tallyPGM = []
-				this.setVariable('pgm_source', element['$']['value'].toLowerCase().split('|'))
+				let sourceNames = []
 				element['$']['value']
 					.toLowerCase()
 					.split('|')
 					.forEach((element2) => {
 						const index = this.inputs.findIndex((el) => el.name == element2.toLowerCase())
 						if (index != -1) this.tallyPGM[this.inputs[index].id] = 'true'
+						sourceNames.push(this.inputs[index]?.short_name)
 					})
+				this.setVariable('pgm_source', sourceNames.join('\\n'))
 			} else if (element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11))
 				if (index != -1) {
