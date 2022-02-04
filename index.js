@@ -477,9 +477,7 @@ class instance extends instance_skel {
 	 */
 	shortcutStatesIngest(states) {
 		states.forEach((element) => {
-			if (element['$']['name'] == 'preview_tally') {
-			} else if (element['$']['name'] == 'program_tally') {
-			} else if (element['$']['name'].match(/_short_name/)) {
+			if (element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11))
 				if (index != -1) {
 					this.inputs[index].short_name = element['$']['value']
@@ -526,9 +524,8 @@ class instance extends instance_skel {
 				this.checkFeedbacks('play_media')
 			}
 		})
-		this.checkFeedbacks('tally_PVW')
-		this.checkFeedbacks('tally_PGM')
-		this.checkFeedbacks('tally_streaming')
+
+		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher changes for proper PGM/PVW button variable names on start-up
 	}
 	/**
 	 * @param  {} data
@@ -644,12 +641,6 @@ class instance extends instance_skel {
 				'pvw_source',
 				pvwSource?.short_name ? pvwSource.short_name : data['switcher_update']['$']['preview_source']
 			)
-
-			this.actions() // Set the actions after info is retrieved
-			this.init_feedbacks() // Same for feedback as it holds the inputs
-			this.init_presets()
-			this.checkFeedbacks('tally_PGM') // Check directly, which source is active
-			this.checkFeedbacks('tally_PVW') // Check directly, which source is on preview
 		} else if (data['macros'] !== undefined) {
 			// Fetch all macros
 			data['macros']['systemfolder']['macro'].forEach((element) => {
