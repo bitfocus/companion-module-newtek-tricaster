@@ -18,7 +18,8 @@ Allows you to control the Tricaster line of video production switchers from NewT
 - Set Source to DSK per ME (A & B bus)
 - Media options
   - Play/Play Toggle/Stop/Back/Forward
-- Run Macro's (under construction)
+- Run System Macros
+- Trigger Custom Macros
 - Record start/stop
 - Streaming Toggle
 - Set a DataLink key/value

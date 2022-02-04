@@ -31,6 +31,7 @@ class instance extends instance_skel {
 		this.switcher = []
 		this.inputs = []
 		this.system_macros = []
+		this.custom_macros = []
 		this.tally = []
 		this.tallyPVW = []
 		this.tallyPGM = []
@@ -649,6 +650,14 @@ class instance extends instance_skel {
 					label: element['$']['name'],
 				})
 			})
+			data['macros']['folder']?.forEach((folder) => {
+				folder.macro?.forEach((macro) => {
+					this.custom_macros.push({
+						id: macro['$']['name'],
+						label: macro['$']['name'],
+					})
+				})
+			})
 			this.actions() // Reset the actions, marco's could be updated
 		} else if (data['shortcut_states'] !== undefined) {
 			// Handled by TCP states
@@ -768,10 +777,7 @@ class instance extends instance_skel {
 				cmd = opt.custom
 				break
 			case 'trigger':
-				this.debug(`http://${this.config.host}/v1/trigger?name=${opt.macro}`)
-				this.system.emit('rest_get', `http://${this.config.host}/v1/trigger?name=${opt.macro}`, (err, res) => {
-					this.debug(res)
-				})
+				cmd = `<shortcuts><shortcut name="play_macro_byname" value="${opt.macro}"/></shortcuts>`
 				break
 		}
 

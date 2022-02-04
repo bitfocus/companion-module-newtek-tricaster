@@ -39,13 +39,14 @@ module.exports = {
 			],
 		}
 		actions['trigger'] = {
-			label: 'Trigger Marco',
+			label: 'Trigger Custom Marco',
 			options: [
 				{
-					label: 'trigger',
-					type: 'textinput',
+					label: 'Macro Name',
+					type: 'dropdown',
+					choices: this.custom_macros,
 					id: 'macro',
-					default: '',
+					default: this.custom_macros[0] ? this.custom_macros[0].id : 'Macro Name',
 				},
 			],
 		}
@@ -353,7 +354,6 @@ module.exports = {
 				},
 			],
 		}
-
 		return actions
 	},
 }
