@@ -79,9 +79,9 @@ exports.getPresets = function () {
 		feedbacks: [
 			{
 				type: 'tally_record',
-				options: {
-					bg: this.rgb(255, 0, 0),
-					fg: this.rgb(255, 255, 255),
+				style: {
+					bgcolor: this.rgb(255, 0, 0),
+					color: this.rgb(255, 255, 255),
 				},
 			},
 		],
@@ -104,7 +104,7 @@ exports.getPresets = function () {
 		label: 'STREAM',
 		bank: {
 			style: 'text',
-			text: 'Stream on',
+			text: 'Stream On',
 			size: '14',
 			color: foregroundColor,
 			bgcolor: backgroundColor,
@@ -112,9 +112,9 @@ exports.getPresets = function () {
 		feedbacks: [
 			{
 				type: 'tally_streaming',
-				options: {
-					bg: this.rgb(255, 0, 0),
-					fg: this.rgb(255, 255, 255),
+				style: {
+					bgcolor: this.rgb(255, 0, 0),
+					color: this.rgb(255, 255, 255),
 				},
 			},
 		],
@@ -132,7 +132,7 @@ exports.getPresets = function () {
 		label: 'STREAM',
 		bank: {
 			style: 'text',
-			text: 'Stream off',
+			text: 'Stream Off',
 			size: '14',
 			color: foregroundColor,
 			bgcolor: backgroundColor,
@@ -140,9 +140,9 @@ exports.getPresets = function () {
 		feedbacks: [
 			{
 				type: 'tally_streaming',
-				options: {
-					bg: this.rgb(255, 0, 0),
-					fg: this.rgb(255, 255, 255),
+				style: {
+					bgcolor: this.rgb(255, 0, 0),
+					color: this.rgb(255, 255, 255),
 				},
 			},
 		],
@@ -175,9 +175,11 @@ exports.getPresets = function () {
 				{
 					type: 'tally_PGM',
 					options: {
-						bg: this.rgb(255, 0, 0),
-						fg: this.rgb(0, 0, 0),
 						src: element.id,
+					},
+					style: {
+						bgcolor: this.rgb(255, 0, 0),
+						color: this.rgb(255, 255, 255),
 					},
 				},
 			],
@@ -207,9 +209,11 @@ exports.getPresets = function () {
 				{
 					type: 'tally_PVW',
 					options: {
-						bg: this.rgb(255, 255, 0),
-						fg: this.rgb(0, 0, 0),
 						src: element.id,
+					},
+					style: {
+						bgcolor: this.rgb(0, 255, 0),
+						color: this.rgb(255, 255, 255),
 					},
 				},
 			],
@@ -226,7 +230,7 @@ exports.getPresets = function () {
 		 * Source on ME/1
 		 */
 		presets.push({
-			category: 'Source on V1',
+			category: 'Source on M/E 1',
 			label: element.label,
 			bank: {
 				style: 'text',
@@ -241,6 +245,81 @@ exports.getPresets = function () {
 					options: {
 						destination: 'v1_a_row',
 						source: element.id,
+					},
+				},
+			],
+		})
+	})
+
+	this.mediaSourceNames.forEach((source) => {
+		/**
+		 * Source on PGM
+		 */
+		presets.push({
+			category: 'Media Players',
+			label: `${source.label} Toggle Play`,
+			bank: {
+				style: 'text',
+				text: `${source.label} Toggle Play`,
+				size: '14',
+				color: foregroundColor,
+				bgcolor: backgroundColor,
+			},
+			feedbacks: [
+				{
+					type: 'play_media',
+					options: {
+						target: `${source.id}_play`,
+					},
+					style: {
+						bgcolor: this.rgb(0, 255, 0),
+						color: this.rgb(255, 255, 255),
+					},
+				},
+			],
+			actions: [
+				{
+					action: 'media_target',
+					options: {
+						target: `${source.id}_play_toggle`,
+					},
+				},
+			],
+		})
+		presets.push({
+			category: 'Media Players',
+			label: `${source.label} Back`,
+			bank: {
+				style: 'text',
+				text: `${source.label} Back`,
+				size: '14',
+				color: foregroundColor,
+				bgcolor: backgroundColor,
+			},
+			actions: [
+				{
+					action: 'media_target',
+					options: {
+						target: `${source.id}_back`,
+					},
+				},
+			],
+		})
+		presets.push({
+			category: 'Media Players',
+			label: `${source.label} Forward`,
+			bank: {
+				style: 'text',
+				text: `${source.label} Forward`,
+				size: '14',
+				color: foregroundColor,
+				bgcolor: backgroundColor,
+			},
+			actions: [
+				{
+					action: 'media_target',
+					options: {
+						target: `${source.id}_forward`,
 					},
 				},
 			],
