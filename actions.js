@@ -39,7 +39,7 @@ module.exports = {
 			],
 		}
 		actions['trigger'] = {
-			label: 'Trigger Custom Marco',
+			label: 'Trigger Custom Macro',
 			options: [
 				{
 					label: 'Macro Name',
