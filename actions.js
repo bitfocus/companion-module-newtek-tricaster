@@ -46,7 +46,7 @@ module.exports = {
 					type: 'dropdown',
 					choices: this.custom_macros,
 					id: 'macro',
-					default: this.custom_macros[0] ? this.custom_macros[0].id : 'Macro Name',
+					default: this.custom_macros[0] ? this.custom_macros[0].id : '',
 				},
 			],
 		}
