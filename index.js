@@ -27,7 +27,7 @@ class instance extends instance_skel {
 			...feedbacks,
 			...presets,
 		})
-
+		this.session = false
 		this.switcher = []
 		this.inputs = []
 		this.system_macros = []
@@ -257,6 +257,10 @@ class instance extends instance_skel {
 		if (this.pollAPI) {
 			clearInterval(this.pollAPI)
 		}
+		if (this.socket !== undefined) {
+			this.socket.destroy()
+			delete this.socket
+		}
 		if (this.ws !== undefined) {
 			this.ws.close(1000)
 			delete this.ws
@@ -280,23 +284,6 @@ class instance extends instance_skel {
 	connections() {
 		// Settings must be made first
 		if (this.config.host !== undefined) {
-			// Get all initial info needed
-			this.sendGetRequest(`http://${this.config.host}/v1/version`) // Fetch mixer info
-			this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial input info
-			this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
-			this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher changes
-			if (this.config.pollInterval != 0) {
-				this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalink stuff
-				if (this.pollAPI) {
-					clearInterval(this.pollAPI)
-				}
-				this.pollAPI = setInterval(
-					() => {
-						this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalink stuff
-					},
-					this.config.pollInterval < 500 ? 500 : this.config.pollInterval
-				)
-			}
 			this.init_TCP()
 			this.init_feedbacks()
 			this.init_presets()
@@ -383,7 +370,7 @@ class instance extends instance_skel {
 				if (err.errno === 'ECONNREFUSED') {
 					this.log('TCP error: ' + err)
 					this.status(this.STATE_ERROR, err)
-				} else {
+				} else if (this.session) {
 					this.status(this.STATE_ERROR, err)
 					debug('Network error', err)
 					this.log('error', 'Network error: ' + err.message)
@@ -392,9 +379,26 @@ class instance extends instance_skel {
 
 			this.socket.on('connect', () => {
 				this.status(this.STATE_OK)
+				this.session = true
 				// Ask the mixer to give us variable (register/state) updates on connection
 				this.socket.send(`<register name="NTK_states"/>\n`)
-
+				// Get all initial info needed
+				this.sendGetRequest(`http://${this.config.host}/v1/version`) // Fetch mixer info
+				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial input info
+				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
+				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher changes
+				if (this.config.pollInterval != 0) {
+					this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalink stuff
+					if (this.pollAPI) {
+						clearInterval(this.pollAPI)
+					}
+					this.pollAPI = setInterval(
+						() => {
+							this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalink stuff
+						},
+						this.config.pollInterval < 500 ? 500 : this.config.pollInterval
+					)
+				}
 				this.debug('TriCaster shortcut socket Opened')
 				this.init_websocket_listener()
 			})
@@ -456,6 +460,9 @@ class instance extends instance_skel {
 			}
 			if (msg.search('switcher') != '-1') {
 				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher changes
+			}
+			if (msg.search('macros_list') != '-1') {
+				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macro changes
 			}
 		})
 
@@ -542,6 +549,9 @@ class instance extends instance_skel {
 			}
 			this.actions()
 			this.init_presets()
+		} else if (data.shutdown) {
+			this.log('warn', 'Tricaster session closed')
+			this.session = false
 		} else {
 			this.debug('UNKNOWN INCOMING DATA', util.inspect(data, false, null, true))
 		}
@@ -562,7 +572,7 @@ class instance extends instance_skel {
 	sendGetRequest(url) {
 		this.debug('Requesting the following url:', url)
 		this.system.emit('rest_get', url, (err, result) => {
-			if (err !== null) {
+			if (err !== null && this.session && this.currentStatus != 2) {
 				this.status(this.STATUS_ERROR, result.error.code)
 				this.log('error', 'Connection failed (' + result.error.code + ')')
 			} else {
@@ -650,13 +660,21 @@ class instance extends instance_skel {
 					label: element['$']['name'],
 				})
 			})
+			this.custom_macros = []
 			data['macros']['folder']?.forEach((folder) => {
-				folder.macro?.forEach((macro) => {
-					this.custom_macros.push({
-						id: macro['$']['name'],
-						label: macro['$']['name'],
+				if (folder.macro?.length > 1) {
+					folder.macro.forEach((macro) => {
+						this.custom_macros.push({
+							id: macro['$']['name'],
+							label: macro['$']['name'],
+						})
 					})
-				})
+				} else if (folder.macro) {
+					this.custom_macros.push({
+						id: folder.macro['$']['name'],
+						label: folder.macro['$']['name'],
+					})
+				}
 			})
 			this.actions() // Reset the actions, marco's could be updated
 		} else if (data['shortcut_states'] !== undefined) {
