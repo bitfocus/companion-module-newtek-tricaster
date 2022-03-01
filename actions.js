@@ -2,8 +2,30 @@ module.exports = {
 	getActions() {
 		var actions = {}
 
-		actions['take'] = { label: 'Take' }
-		actions['auto'] = { label: 'Auto transition' }
+		actions['take'] = {
+			label: 'Take',
+			options: [
+				{
+					label: 'M/E',
+					type: 'dropdown',
+					choices: this.meList,
+					id: 'v',
+					default: 'main',
+				},
+			],
+		}
+		actions['auto'] = {
+			label: 'Auto transition',
+			options: [
+				{
+					label: 'M/E',
+					type: 'dropdown',
+					choices: this.meList,
+					id: 'v',
+					default: 'main',
+				},
+			],
+		}
 		actions['auto_dsk'] = {
 			label: 'Auto transition DSK',
 			options: [
@@ -243,16 +265,7 @@ module.exports = {
 					label: 'Select V',
 					type: 'dropdown',
 					id: 'v',
-					choices: [
-						{ id: 'v1', label: 'v1' },
-						{ id: 'v2', label: 'v2' },
-						{ id: 'v3', label: 'v3' },
-						{ id: 'v4', label: 'v4' },
-						{ id: 'v5', label: 'v5' },
-						{ id: 'v6', label: 'v6' },
-						{ id: 'v7', label: 'v7' },
-						{ id: 'v8', label: 'v8' },
-					],
+					choices: this.meList,
 					default: 'v1',
 				},
 				{
