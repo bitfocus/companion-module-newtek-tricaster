@@ -41,6 +41,7 @@ class instance extends instance_skel {
 		this.mediaTargets = []
 		this.mediaSourceNames = []
 		this.meDestinations = []
+		this.meList = []
 		this.dskDestinations = []
 		this.createDskDestinations()
 		this.createMediaTargets()
@@ -60,6 +61,10 @@ class instance extends instance_skel {
 	}
 
 	createMeDestinations() {
+		this.meList.push({
+			id: `main`,
+			label: `Main`,
+		})
 		for (let index = 1; index < 9; index++) {
 			this.meDestinations.push({
 				id: `v${index}_a_row`,
@@ -68,6 +73,10 @@ class instance extends instance_skel {
 			this.meDestinations.push({
 				id: `v${index}_b_row`,
 				label: `M/E ${index} PVW`,
+			})
+			this.meList.push({
+				id: `v${index}`,
+				label: `M/E ${index}`,
 			})
 			for (let dsk = 1; dsk < 5; dsk++) {
 				this.dskDestinations.push({
@@ -724,10 +733,10 @@ class instance extends instance_skel {
 
 		switch (id) {
 			case 'take':
-				cmd = `<shortcuts><shortcut name="main_background_take" /></shortcuts>`
+				cmd = `<shortcuts><shortcut name="${opt.v}_take" /></shortcuts>`
 				break
 			case 'auto':
-				cmd = `<shortcuts><shortcut name="main_background_auto" /></shortcuts>`
+				cmd = `<shortcuts><shortcut name="${opt.v}_auto" /></shortcuts>`
 				break
 			case 'auto_dsk':
 				cmd = `<shortcuts><shortcut name="main_${opt.dsk}_auto" /></shortcuts>`
