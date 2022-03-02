@@ -584,7 +584,7 @@ class instance extends instance_skel {
 			if (err !== null && this.session && this.currentStatus != 2) {
 				this.status(this.STATUS_ERROR, result.error.code)
 				this.log('error', 'Connection failed (' + result.error.code + ')')
-			} else {
+			} else if (result.response?.statusCode) {
 				if (result.response.statusCode == 200) {
 					this.status(this.STATUS_OK)
 					this.processData(result.data)
