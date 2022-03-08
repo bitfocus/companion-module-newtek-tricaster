@@ -493,7 +493,7 @@ class instance extends instance_skel {
 	 * @param  {} states
 	 */
 	shortcutStatesIngest(states) {
-		states.forEach((element) => {
+		states?.forEach((element) => {
 			if (element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11))
 				if (index != -1) {
