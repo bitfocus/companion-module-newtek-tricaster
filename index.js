@@ -670,6 +670,12 @@ class instance extends instance_skel {
 				})
 			})
 			this.custom_macros = []
+			data['macros']['sessionfolder']['macro']?.forEach((element) => {
+				this.custom_macros.push({
+					id: element['$']['name'],
+					label: element['$']['name'],
+				})
+			})
 			data['macros']['folder']?.forEach((folder) => {
 				if (folder.macro?.length > 1) {
 					folder.macro.forEach((macro) => {
