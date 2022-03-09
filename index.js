@@ -493,7 +493,7 @@ class instance extends instance_skel {
 	 * @param  {} states
 	 */
 	shortcutStatesIngest(states) {
-		states.forEach((element) => {
+		states?.forEach((element) => {
 			if (element['$']['name'].match(/_short_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11))
 				if (index != -1) {
@@ -670,6 +670,22 @@ class instance extends instance_skel {
 				})
 			})
 			this.custom_macros = []
+
+			let sessionMacros = data['macros']['sessionfolder']
+			if (sessionMacros.macro?.length > 1) {
+				sessionMacros.macro.forEach((macro) => {
+					this.custom_macros.push({
+						id: macro['$']['name'],
+						label: macro['$']['name'],
+					})
+				})
+			} else if (sessionMacros.macro) {
+				this.custom_macros.push({
+					id: sessionMacros.macro['$']['name'],
+					label: sessionMacros.macro['$']['name'],
+				})
+			}
+
 			data['macros']['folder']?.forEach((folder) => {
 				if (folder.macro?.length > 1) {
 					folder.macro.forEach((macro) => {
