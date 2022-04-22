@@ -274,6 +274,12 @@ class instance extends instance_skel {
 			this.ws.close(1000)
 			delete this.ws
 		}
+		if (this.websocketPing) {
+			clearInterval(this.websocketPing)
+		}
+		if (this.reconnect) {
+			clearInterval(this.reconnect)
+		}
 	}
 
 	/**
