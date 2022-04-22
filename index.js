@@ -512,12 +512,16 @@ class instance extends instance_skel {
 				if (vb_index != -1) {
 					this.meDestinations[vb_index].label = element['$']['value'] + ' b bus'
 				}
+				this.actions()
+				this.init_presets()
 			} else if (element['$']['name'].match(/_long_name/)) {
 				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -10))
 				if (index != -1) {
 					this.inputs[index].long_name = element['$']['value']
 					this.inputs[index].label = element['$']['value']
 				}
+				this.actions()
+				this.init_presets()
 			} else if (element['$']['name'].match(/record_toggle/)) {
 				this.switcher['recording'] = element['$']['value'] == '1' ? true : false
 				this.setVariable('recording', element['$']['value'] == '1' ? true : false)
@@ -556,8 +560,6 @@ class instance extends instance_skel {
 			} else {
 				this.shortcutStatesIngest(data.shortcut_states.shortcut_state)
 			}
-			this.actions()
-			this.init_presets()
 		} else if (data.shutdown) {
 			this.log('warn', 'Tricaster session closed')
 			this.session = false
