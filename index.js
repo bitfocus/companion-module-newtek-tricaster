@@ -481,7 +481,7 @@ class instance extends instance_skel {
 			}
 		})
 
-		this.ws.on('onclose', () => {
+		this.ws.on('close', (code) => {
 			if (code !== 1000) {
 				this.debug('error', `Websocket closed:  ${code}`)
 				this.reconnect = setInterval(() => {
@@ -490,7 +490,7 @@ class instance extends instance_skel {
 			}
 		})
 
-		this.ws.on('onerror', (msg) => {
+		this.ws.on('error', (msg) => {
 			this.debug('Error', msg.data)
 		})
 	}
