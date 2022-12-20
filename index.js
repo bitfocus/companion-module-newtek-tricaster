@@ -24,7 +24,6 @@ class instance extends instance_skel {
 
 		Object.assign(this, {
 			...actions,
-			...feedbacks,
 			...presets,
 		})
 		this.session = false
