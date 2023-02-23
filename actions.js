@@ -1,9 +1,7 @@
-module.exports = {
-	getActions() {
-		var actions = {}
-
-		actions['take'] = {
-			label: 'Take',
+export function getActions() {
+	return {
+		take: {
+			name: 'Take',
 			options: [
 				{
 					label: 'M/E',
@@ -13,9 +11,12 @@ module.exports = {
 					default: 'main',
 				},
 			],
-		}
-		actions['auto'] = {
-			label: 'Auto transition',
+			callback: (action) => {
+				this.sendCommand(`${action.options.v}_take`)
+			},
+		},
+		auto: {
+			name: 'Auto transition',
 			options: [
 				{
 					label: 'M/E',
@@ -25,9 +26,12 @@ module.exports = {
 					default: 'main',
 				},
 			],
-		}
-		actions['auto_dsk'] = {
-			label: 'Auto transition DSK',
+			callback: (action) => {
+				this.sendCommand(`${action.options.v}_auto`)
+			},
+		},
+		auto_dsk: {
+			name: 'Auto transition DSK',
 			options: [
 				{
 					label: 'Choose dsk',
@@ -42,11 +46,26 @@ module.exports = {
 					default: 'dsk1',
 				},
 			],
-		}
-		actions['record_start'] = { label: 'Record Start' }
-		actions['record_stop'] = { label: 'Record Stop' }
-		actions['streaming'] = {
-			label: 'Streaming',
+			callback: (action) => {
+				this.sendCommand(`main_${action.options.dsk}_auto`)
+			},
+		},
+		record_start: {
+			label: 'Record Start',
+			options: [],
+			callback: () => {
+				this.sendCommand(`record_start`)
+			},
+		},
+		record_stop: {
+			label: 'Record Stop',
+			options: [],
+			callback: () => {
+				this.sendCommand(`record_stop`)
+			},
+		},
+		streaming: {
+			name: 'Streaming',
 			options: [
 				{
 					label: 'on/off',
@@ -59,9 +78,12 @@ module.exports = {
 					default: 1,
 				},
 			],
-		}
-		actions['trigger'] = {
-			label: 'Trigger Custom Macro',
+			callback: (action) => {
+				this.sendCommand(`streaming_toggle`, `${parseInt(action.options.force)}`)
+			},
+		},
+		trigger: {
+			name: 'Trigger Custom Macro',
 			options: [
 				{
 					label: 'Macro Name',
@@ -71,9 +93,12 @@ module.exports = {
 					default: this.custom_macros[0] ? this.custom_macros[0].id : '',
 				},
 			],
-		}
-		actions['macros'] = {
-			label: 'Run system macro',
+			callback: (action) => {
+				this.sendCommand(`play_macro_byname`, `${action.options.macro}`)
+			},
+		},
+		macros: {
+			name: 'Run system macro',
 			options: [
 				{
 					label: 'Select macro',
@@ -83,9 +108,13 @@ module.exports = {
 					default: 'Stream: Start',
 				},
 			],
-		}
-		actions['source_pvw'] = {
-			label: 'Set source to preview',
+			callback: (action) => {
+				///CHECK THIS OUT
+				this.sendCommand(`play_macro_byname`, `${action.options.macro}`)
+			},
+		},
+		source_pvw: {
+			name: 'Set source to preview',
 			options: [
 				{
 					label: 'Sources',
@@ -95,9 +124,12 @@ module.exports = {
 					default: 0,
 				},
 			],
-		}
-		actions['source_pgm'] = {
-			label: 'Set source to program',
+			callback: (action) => {
+				this.sendCommand(`main_b_row`, `${action.options.source}`)
+			},
+		},
+		source_pgm: {
+			name: 'Set source to program',
 			options: [
 				{
 					label: 'Sources',
@@ -107,9 +139,12 @@ module.exports = {
 					default: 0,
 				},
 			],
-		}
-		actions['source_to_v'] = {
-			label: 'Set source to M/E',
+			callback: (action) => {
+				this.sendCommand(`main_a_row`, `${action.options.source}`)
+			},
+		},
+		source_to_v: {
+			name: 'Set source to M/E',
 			options: [
 				{
 					label: 'Destination',
@@ -126,9 +161,12 @@ module.exports = {
 					default: 0,
 				},
 			],
-		}
-		actions['source_to_dsk'] = {
-			label: 'Set source to DSK',
+			callback: (action) => {
+				this.sendCommand(`${action.options.destination}`, `${action.options.source}`)
+			},
+		},
+		source_to_dsk: {
+			name: 'Set source to DSK',
 			options: [
 				{
 					label: 'Destination',
@@ -145,9 +183,12 @@ module.exports = {
 					default: 0,
 				},
 			],
-		}
-		actions['media_target'] = {
-			label: 'Media options',
+			callback: (action) => {
+				this.sendCommand(`${action.options.dskDestinations}`, `${action.options.source}`)
+			},
+		},
+		media_target: {
+			name: 'Media options',
 			options: [
 				{
 					label: 'Target',
@@ -157,9 +198,12 @@ module.exports = {
 					default: 'ddr1_play',
 				},
 			],
-		}
-		actions['autoplay_mode_toggle'] = {
-			label: 'Autoplay mode',
+			callback: (action) => {
+				this.sendCommand(`${action.options.target}`)
+			},
+		},
+		autoplay_mode_toggle: {
+			name: 'Autoplay mode',
 			options: [
 				{
 					label: 'Target',
@@ -184,9 +228,12 @@ module.exports = {
 					default: 'true',
 				},
 			],
-		}
-		actions['datalink'] = {
-			label: 'Set DataLink key value',
+			callback: (action) => {
+				this.sendCommand(`${action.options.target}_autoplay_mode_toggle`, `${action.options.toggle}`)
+			},
+		},
+		datalink: {
+			name: 'Set DataLink key value',
 			options: [
 				{
 					label: 'DataLink Key',
@@ -201,9 +248,14 @@ module.exports = {
 					width: 6,
 				},
 			],
-		}
-		actions['audio_volume'] = {
-			label: 'Set volume',
+			callback: (action) => {
+				//FIX
+				let cmd = `<shortcuts><shortcut name="set_datalink"><entry key="datalink_key" value="${opt.datalink_key}" /><entry key="datalink_value" value="${opt.datalink_value}"/></shortcut></shortcuts>`
+				this.sendCommand(`set_datalink`, `${action.options.toggle}`)
+			},
+		},
+		audio_volume: {
+			name: 'Set volume',
 			options: [
 				{
 					label: 'Choice',
@@ -228,9 +280,12 @@ module.exports = {
 					max: 0,
 				},
 			],
-		}
-		actions['audio_mute'] = {
-			label: 'Mute audio',
+			callback: (action) => {
+				cmd = `<shortcuts><shortcut name="${opt.source}_volume" value="${opt.volume}" /></shortcuts>`
+			},
+		},
+		audio_mute: {
+			name: 'Mute audio',
 			options: [
 				{
 					label: 'Choice',
@@ -257,9 +312,12 @@ module.exports = {
 					default: 'true',
 				},
 			],
-		}
-		actions['load_save_v'] = {
-			label: 'Load/Save Preset V',
+			callback: (action) => {
+				cmd = `<shortcuts><shortcut name="${opt.source}_mute" value="${opt.mute}" /></shortcuts>`
+			},
+		},
+		load_save_v: {
+			name: 'Load/Save Preset V',
 			options: [
 				{
 					label: 'Select V',
@@ -287,9 +345,12 @@ module.exports = {
 					default: 0,
 				},
 			],
-		}
-		actions['transition_speed_number'] = {
-			label: 'Transition Speed (number 1-10)',
+			callback: (action) => {
+				cmd = `<shortcuts><shortcut name="${opt.v}${opt.loadSave}" value="${opt.preset}" /></shortcuts>`
+			},
+		},
+		transition_speed_number: {
+			name: 'Transition Speed (number 1-10)',
 			options: [
 				{
 					label: 'Speed',
@@ -300,9 +361,12 @@ module.exports = {
 					default: 1,
 				},
 			],
-		}
-		actions['transition_speed'] = {
-			label: 'Transition Speed',
+			callback: (action) => {
+				cmd = `<shortcuts><shortcut name="main_background_speed" value="${opt.speed}" /></shortcuts>`
+			},
+		},
+		transition_speed: {
+			name: 'Transition Speed',
 			options: [
 				{
 					label: 'Speed',
@@ -316,9 +380,12 @@ module.exports = {
 					default: 'main_background_medium',
 				},
 			],
-		}
-		actions['transition_index'] = {
-			label: 'Transition Type',
+			callback: (action) => {
+				cmd = `<shortcuts><shortcut name="${opt.speed}" /></shortcuts>`
+			},
+		},
+		transition_index: {
+			name: 'Transition Type',
 			options: [
 				{
 					label: 'Type',
@@ -338,9 +405,12 @@ module.exports = {
 					default: '1',
 				},
 			],
-		}
-		actions['previz_dsk_auto'] = {
-			label: 'Previz DSK Auto transition',
+			callback: (action) => {
+				cmd = `<shortcuts><shortcut name="main_background_select_index" value="${opt.type}" /></shortcuts>`
+			},
+		},
+		previz_dsk_auto: {
+			name: 'Previz DSK Auto transition',
 			options: [
 				{
 					label: 'Choose dsk',
@@ -355,9 +425,12 @@ module.exports = {
 					default: 'dsk1',
 				},
 			],
-		}
-		actions['custom'] = {
-			label: 'Custom shortcut',
+			callback: (action) => {
+				cmd = `<shortcuts><shortcut name="previz_${opt.dsk}_auto" /></shortcuts>`
+			},
+		},
+		custom: {
+			name: 'Custom shortcut',
 			options: [
 				{
 					label: 'Command',
@@ -366,7 +439,9 @@ module.exports = {
 					default: '<shortcuts><shortcut name="main_background_take" /></shortcuts>',
 				},
 			],
-		}
-		return actions
-	},
+			callback: (action) => {
+				cmd = opt.custom
+			},
+		},
+	}
 }
