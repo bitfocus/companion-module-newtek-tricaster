@@ -50,7 +50,7 @@ export function getFeedbacks() {
 		},
 	}
 
-	feedbacks.tally_record = {
+	feedbacks.recording = {
 		type: 'boolean',
 		name: 'Change style when recording',
 		description: 'When recording, button style will change',
@@ -63,7 +63,7 @@ export function getFeedbacks() {
 		},
 	}
 
-	feedbacks.tally_streaming = {
+	feedbacks.streaming = {
 		type: 'boolean',
 		name: 'Change style when streaming',
 		description: 'When streaming, button style will change',
@@ -76,9 +76,9 @@ export function getFeedbacks() {
 		},
 	}
 
-	feedbacks.play_media = {
+	feedbacks.mediaPlaying = {
 		type: 'boolean',
-		name: 'Change style when player is active',
+		name: 'Change style when media player is active',
 		description: 'When media state is on play, button style will change',
 		defaultStyle: { bgcolor: ColorGreen },
 		options: [

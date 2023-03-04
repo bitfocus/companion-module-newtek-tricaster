@@ -72,7 +72,7 @@ export function getPresets() {
 			text: 'AUTO DSK1',
 			size: '14',
 			color: ColorWhite,
-			bgcolor: ColorRed,
+			bgcolor: ColorBlack,
 		},
 		steps: [
 			{
@@ -105,7 +105,10 @@ export function getPresets() {
 			{
 				down: [
 					{
-						actionId: 'record_start',
+						actionId: 'record',
+						options: {
+							record: 'toggle',
+						},
 					},
 				],
 				up: [],
@@ -113,7 +116,7 @@ export function getPresets() {
 		],
 		feedbacks: [
 			{
-				feedbackId: 'tally_record',
+				feedbackId: 'recording',
 				style: {
 					bgcolor: ColorRed,
 					color: ColorWhite,
@@ -137,9 +140,9 @@ export function getPresets() {
 			{
 				down: [
 					{
-						actionId: 'streaming',
+						actionId: 'stream',
 						options: {
-							force: '1',
+							stream: 1,
 						},
 					},
 				],
@@ -148,7 +151,7 @@ export function getPresets() {
 		],
 		feedbacks: [
 			{
-				feedbackId: 'tally_streaming',
+				feedbackId: 'streaming',
 				style: {
 					bgcolor: ColorRed,
 					color: ColorWhite,
@@ -172,9 +175,9 @@ export function getPresets() {
 			{
 				down: [
 					{
-						actionId: 'streaming',
+						actionId: 'stream',
 						options: {
-							force: '0',
+							stream: 0,
 						},
 					},
 				],
@@ -183,7 +186,7 @@ export function getPresets() {
 		],
 		feedbacks: [
 			{
-				feedbackId: 'tally_streaming',
+				feedbackId: 'streaming',
 				style: {
 					bgcolor: ColorRed,
 					color: ColorWhite,
@@ -325,9 +328,9 @@ export function getPresets() {
 			],
 			feedbacks: [
 				{
-					feedbackId: 'play_media',
+					feedbackId: 'mediaPlaying',
 					options: {
-						target: `${source.id}_play`,
+						target: `${source.id}`,
 					},
 					style: {
 						bgcolor: ColorGreen,

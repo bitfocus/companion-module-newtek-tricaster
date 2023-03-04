@@ -50,39 +50,53 @@ export function getActions() {
 				this.sendCommand(`main_${action.options.dsk}_auto`)
 			},
 		},
-		record_start: {
-			name: 'Record Start',
-			options: [],
-			callback: () => {
-				this.sendCommand(`record_start`)
-			},
-		},
-		record_stop: {
-			name: 'Record Stop',
-			options: [],
-			callback: () => {
-				this.sendCommand(`record_stop`)
-			},
-		},
-		streaming: {
-			name: 'Streaming',
+		record: {
+			name: 'Record actions',
 			options: [
 				{
-					label: 'on/off',
-					id: 'force',
+					label: 'Action',
+					id: 'record',
 					type: 'dropdown',
 					choices: [
-						{ id: 1, label: 'on' },
-						{ id: 0, label: 'off' },
+						{ id: 'toggle', label: 'Toggle Record' },
+						{ id: 1, label: 'Start Record' },
+						{ id: 0, label: 'Stop Record' },
 					],
-					default: 1,
+					default: 'toggle',
 				},
 			],
 			callback: (action) => {
-				this.sendCommand(`streaming_toggle`, `${parseInt(action.options.force)}`)
+				if (action.options.record === 'toggle') {
+					this.sendCommand(`record_toggle`)
+				} else {
+					this.sendCommand(`record_toggle`, `${action.options.record}`)
+				}
 			},
 		},
-		trigger: {
+		stream: {
+			name: 'Stream actions',
+			options: [
+				{
+					label: 'Action',
+					id: 'stream',
+					type: 'dropdown',
+					choices: [
+						{ id: 'toggle', label: 'Toggle Stream' },
+						{ id: 1, label: 'Start Stream' },
+						{ id: 0, label: 'Stop Stream' },
+					],
+					default: 'toggle',
+				},
+			],
+			callback: (action) => {
+				if (action.options.stream === 'toggle') {
+					this.sendCommand(`streaming_toggle`)
+				} else {
+					this.sendCommand(`streaming_toggle`, `${action.options.stream}`)
+				}
+			},
+		},
+		customMacro: {
 			name: 'Run custom macro',
 			options: [
 				{
@@ -97,7 +111,7 @@ export function getActions() {
 				this.sendCommand(`play_macro_byname`, `${action.options.macro}`)
 			},
 		},
-		macros: {
+		systemMacro: {
 			name: 'Run system macro',
 			options: [
 				{
@@ -187,7 +201,7 @@ export function getActions() {
 			},
 		},
 		media_target: {
-			name: 'Media options',
+			name: 'Media actions',
 			options: [
 				{
 					label: 'Target',
@@ -232,7 +246,7 @@ export function getActions() {
 			},
 		},
 		datalink: {
-			name: 'Set DataLink key value',
+			name: 'Set DataLink value',
 			options: [
 				{
 					label: 'DataLink Key',
@@ -315,10 +329,10 @@ export function getActions() {
 			},
 		},
 		load_save_v: {
-			name: 'Load/Save Preset V',
+			name: 'Load/Save M/E Preset',
 			options: [
 				{
-					label: 'Select V',
+					label: 'M/E',
 					type: 'dropdown',
 					id: 'v',
 					choices: this.meList,
@@ -335,7 +349,7 @@ export function getActions() {
 					default: '_load_from_emem',
 				},
 				{
-					label: 'Preset number',
+					label: 'Preset Number',
 					type: 'number',
 					id: 'preset',
 					min: 0,
@@ -348,10 +362,10 @@ export function getActions() {
 			},
 		},
 		transition_speed_number: {
-			name: 'Transition Speed (number 1-10)',
+			name: 'Transition Speed',
 			options: [
 				{
-					label: 'Speed',
+					label: 'Speed (1-10)',
 					type: 'number',
 					id: 'speed',
 					min: 0,
@@ -389,17 +403,7 @@ export function getActions() {
 					label: 'Type',
 					type: 'dropdown',
 					id: 'type',
-					choices: [
-						{ id: '-1', label: '-1' },
-						{ id: '0', label: '0' },
-						{ id: '1', label: '1' },
-						{ id: '2', label: '2' },
-						{ id: '3', label: '3' },
-						{ id: '4', label: '4' },
-						{ id: '5', label: '5' },
-						{ id: '6', label: '6' },
-						{ id: '7', label: '7' },
-					],
+					choices: this.transitions,
 					default: '1',
 				},
 			],
@@ -411,7 +415,7 @@ export function getActions() {
 			name: 'Previz DSK Auto transition',
 			options: [
 				{
-					label: 'Choose dsk',
+					label: 'DSK',
 					type: 'dropdown',
 					choices: [
 						{ id: 'dsk1', label: 'DSK 1' },

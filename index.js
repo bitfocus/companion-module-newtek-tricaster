@@ -132,6 +132,10 @@ class TricasterInstance extends InstanceBase {
 		this.custom_macros = []
 		this.datalink = []
 		this.shortcut_states = []
+		this.transitions = [
+			{ id: '-1', label: 'Cut' },
+			{ id: '0', label: 'Fade' },
+		]
 		//M/Es
 		this.meDestinations = []
 		this.meList = [
@@ -211,7 +215,7 @@ class TricasterInstance extends InstanceBase {
 	async getInputs() {
 		let tallyData = await this.awaitRequest('dictionary?key=tally')
 		let states = await this.awaitRequest('dictionary?key=shortcut_states')
-
+		let transitions = await this.awaitRequest('dictionary?key=switcher_ui_effects')
 		if (tallyData && states) {
 			tallyData.tally.column.forEach((input) => {
 				//Create Inputs
@@ -328,6 +332,22 @@ class TricasterInstance extends InstanceBase {
 				}
 			})
 		}
+		if (transitions) {
+			transitions.switcher_ui_effects.switcher.forEach((switcher) => {
+				if (switcher.name === 'main') {
+					let int = 0
+					for (let x in switcher.effect_bin) {
+						let transition = switcher.effect_bin[x]
+						let name = transition?.effect.match(/[^\\]+\.trans$/i)
+						if (name) {
+							name = name[0].replace('.trans', '')
+							this.transitions.push({ id: ++int, label: name })
+						}
+					}
+				}
+			})
+		}
+
 		this.sendGetRequest('dictionary?key=switcher') //Wait until input names are defined before getting pgm/prv info
 
 		this.initActions()
@@ -543,13 +563,13 @@ class TricasterInstance extends InstanceBase {
 						}
 					}
 				} else if (state.name == 'record_toggle') {
-					this.switcher.recording = state.value == '1' ? true : false
+					this.switcher.recording = state.value > 0 ? true : false
 					this.setVariableValues({ recording: this.switcher.recording ? 'Recording' : 'Stopped' })
-					this.checkFeedbacks('tally_record')
+					this.checkFeedbacks('recording')
 				} else if (state.name == 'streaming_toggle') {
 					this.switcher.streaming = state.value == '1' ? true : false
 					this.setVariableValues({ streaming: this.switcher.streaming ? 'Streaming' : 'Stopped' })
-					this.checkFeedbacks('tally_streaming')
+					this.checkFeedbacks('streaming')
 				} else if (
 					state.name.match(/ddr[0-9]_play/) ||
 					state.name.match(/gfx[0-9]_play/) ||
@@ -558,7 +578,7 @@ class TricasterInstance extends InstanceBase {
 					state.name.match(/sound_play/)
 				) {
 					this.shortcut_states[`${state.name}`] = state.value
-					this.checkFeedbacks('play_media')
+					this.checkFeedbacks('mediaPlaying')
 				}
 			})
 		} else if (data.datalink_values) {
