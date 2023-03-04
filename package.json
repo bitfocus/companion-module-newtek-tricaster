@@ -11,8 +11,7 @@
 		"@companion-module/base": "~1.2.1",
 		"fast-xml-parser": "^4.1.2",
 		"node-fetch": "^3.3.0",
-		"ws": "^8.12.1",
-		"xml2js": "^0.4.23"
+		"ws": "^8.12.1"
 	},
 	"repository": {
 		"type": "git",

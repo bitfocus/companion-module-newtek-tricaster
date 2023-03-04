@@ -5,8 +5,8 @@ Allows you to control the Tricaster line of video production switchers from NewT
 ### Configuration
 
 - On the Tricaster under Administration Tools, turn off the LivePanel password
-- Enter the IP address of the Tricaster in the module settings
-- _Optional: To get variables from DataLink, enable polling in the module settings. The interval must be at least 500ms_
+- Enter the IP address or hostname of the Tricaster in the module settings
+- _Optional: To get variables from DataLink, enable "DataLink Variables" in the module settings"_
 
 ### Available Actions
 

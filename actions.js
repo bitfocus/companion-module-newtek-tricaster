@@ -51,14 +51,14 @@ export function getActions() {
 			},
 		},
 		record_start: {
-			label: 'Record Start',
+			name: 'Record Start',
 			options: [],
 			callback: () => {
 				this.sendCommand(`record_start`)
 			},
 		},
 		record_stop: {
-			label: 'Record Stop',
+			name: 'Record Stop',
 			options: [],
 			callback: () => {
 				this.sendCommand(`record_stop`)
@@ -83,7 +83,7 @@ export function getActions() {
 			},
 		},
 		trigger: {
-			name: 'Trigger Custom Macro',
+			name: 'Run custom macro',
 			options: [
 				{
 					label: 'Macro Name',
@@ -101,7 +101,7 @@ export function getActions() {
 			name: 'Run system macro',
 			options: [
 				{
-					label: 'Select macro',
+					label: 'Macro Name',
 					type: 'dropdown',
 					id: 'macro',
 					choices: this.system_macros,
@@ -109,7 +109,6 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				///CHECK THIS OUT
 				this.sendCommand(`play_macro_byname`, `${action.options.macro}`)
 			},
 		},
@@ -132,11 +131,11 @@ export function getActions() {
 			name: 'Set source to program',
 			options: [
 				{
-					label: 'Sources',
+					label: 'Source',
 					type: 'dropdown',
 					id: 'source',
 					choices: this.inputs,
-					default: 0,
+					default: '0',
 				},
 			],
 			callback: (action) => {
@@ -154,7 +153,7 @@ export function getActions() {
 					default: 'v1_a_row',
 				},
 				{
-					label: 'Sources',
+					label: 'Source',
 					type: 'dropdown',
 					id: 'source',
 					choices: this.inputs,
@@ -249,9 +248,8 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				//FIX
-				let cmd = `<shortcuts><shortcut name="set_datalink"><entry key="datalink_key" value="${opt.datalink_key}" /><entry key="datalink_value" value="${opt.datalink_value}"/></shortcut></shortcuts>`
-				this.sendCommand(`set_datalink`, `${action.options.toggle}`)
+				cmd = `datalink?key=${action.options.datalink_key}&value=${action.options.datalink_value}`
+				this.sendCommand(null, null, cmd)
 			},
 		},
 		audio_volume: {
@@ -281,7 +279,7 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				cmd = `<shortcuts><shortcut name="${opt.source}_volume" value="${opt.volume}" /></shortcuts>`
+				this.sendCommand(`${action.options.source}_volume`, `${action.options.volume}`)
 			},
 		},
 		audio_mute: {
@@ -313,7 +311,7 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				cmd = `<shortcuts><shortcut name="${opt.source}_mute" value="${opt.mute}" /></shortcuts>`
+				this.sendCommand(`${action.options.source}_mute`, `${action.options.mute}`)
 			},
 		},
 		load_save_v: {
@@ -346,7 +344,7 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				cmd = `<shortcuts><shortcut name="${opt.v}${opt.loadSave}" value="${opt.preset}" /></shortcuts>`
+				this.sendCommand(`${action.options.v}${action.options.loadSave}`, `${action.options.preset}`)
 			},
 		},
 		transition_speed_number: {
@@ -362,7 +360,7 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				cmd = `<shortcuts><shortcut name="main_background_speed" value="${opt.speed}" /></shortcuts>`
+				this.sendCommand(`main_background_speed`, `${action.options.speed}`)
 			},
 		},
 		transition_speed: {
@@ -381,7 +379,7 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				cmd = `<shortcuts><shortcut name="${opt.speed}" /></shortcuts>`
+				this.sendCommand(action.options.speed)
 			},
 		},
 		transition_index: {
@@ -406,7 +404,7 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				cmd = `<shortcuts><shortcut name="main_background_select_index" value="${opt.type}" /></shortcuts>`
+				this.sendCommand(`main_background_select_index`, `${action.options.type}`)
 			},
 		},
 		previz_dsk_auto: {
@@ -426,7 +424,7 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				cmd = `<shortcuts><shortcut name="previz_${opt.dsk}_auto" /></shortcuts>`
+				this.sendCommand(`previz_${action.options.dsk}_auto`)
 			},
 		},
 		custom: {
@@ -436,11 +434,11 @@ export function getActions() {
 					label: 'Command',
 					type: 'textinput',
 					id: 'custom',
-					default: '<shortcuts><shortcut name="main_background_take" /></shortcuts>',
+					default: 'shortcut?name=main_background_take',
 				},
 			],
 			callback: (action) => {
-				cmd = opt.custom
+				this.sendCommand(null, null, action.options.custom)
 			},
 		},
 	}

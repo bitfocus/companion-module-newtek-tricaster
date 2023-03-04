@@ -10,6 +10,14 @@ export function getVariables() {
 		name: 'Product version',
 	})
 	variables.push({
+		variableId: 'hostname',
+		name: 'Hostname',
+	})
+	variables.push({
+		variableId: 'session_name',
+		name: 'Session name',
+	})
+	variables.push({
 		variableId: 'pgm_source',
 		name: 'Source on Program',
 	})
@@ -19,12 +27,19 @@ export function getVariables() {
 	})
 	variables.push({
 		variableId: 'recording',
-		name: 'Recording',
+		name: 'Recording Status',
 	})
 	variables.push({
 		variableId: 'streaming',
-		name: 'Streaming',
+		name: 'Streaming Status',
 	})
+
+	if (this.config.datalink && this.datalink) {
+		this.datalink.forEach((element) => {
+			let name = element.key.replace(/[\W]/gi, '')
+			variables.push({ variableId: name, name: name })
+		})
+	}
 
 	return variables
 }

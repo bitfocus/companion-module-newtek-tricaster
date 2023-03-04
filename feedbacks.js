@@ -17,11 +17,12 @@ export function getFeedbacks() {
 				label: 'Source',
 				id: 'src',
 				choices: this.inputs,
-				default: 0,
+				default: '0',
 			},
 		],
 		callback: (feedback) => {
-			if (this.tallyPGM[feedback.options.src] == 'true') {
+			let source = this.inputs.find((el) => el.id == feedback.options.src)
+			if (source?.on_pgm === 'true') {
 				return true
 			}
 		},
@@ -38,11 +39,12 @@ export function getFeedbacks() {
 				label: 'Source',
 				id: 'src',
 				choices: this.inputs,
-				default: 0,
+				default: '0',
 			},
 		],
 		callback: (feedback) => {
-			if (this.tallyPVW[feedback.options.src] == 'true') {
+			let source = this.inputs.find((el) => el.id == feedback.options.src)
+			if (source?.on_prev === 'true') {
 				return true
 			}
 		},
@@ -55,7 +57,7 @@ export function getFeedbacks() {
 		defaultStyle: { bgcolor: ColorRed },
 		options: [],
 		callback: () => {
-			if (this.switcher['recording']) {
+			if (this.switcher.recording) {
 				return true
 			}
 		},
@@ -68,21 +70,11 @@ export function getFeedbacks() {
 		defaultStyle: { bgcolor: ColorRed },
 		options: [],
 		callback: () => {
-			if (this.switcher['streaming']) {
+			if (this.switcher.streaming) {
 				return true
 			}
 		},
 	}
-
-	/// move this somewhere else
-	let playMediaChoices = []
-
-	this.mediaSourceNames?.forEach((source) => {
-		playMediaChoices.push({
-			id: `${source.id}_play`,
-			label: `${source.label}`,
-		})
-	})
 
 	feedbacks.play_media = {
 		type: 'boolean',
@@ -94,12 +86,12 @@ export function getFeedbacks() {
 				type: 'dropdown',
 				label: 'Media Player',
 				id: 'target',
-				choices: playMediaChoices,
-				default: 'ddr1_play',
+				choices: this.mediaSourceNames,
+				default: 'ddr1',
 			},
 		],
 		callback: (feedback) => {
-			if (this.shortcut_states[feedback.options.target] == 'true') {
+			if (this.shortcut_states[`${feedback.options.target}_play`] == 'true') {
 				return true
 			}
 		},

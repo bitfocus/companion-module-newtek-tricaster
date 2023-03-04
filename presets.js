@@ -25,6 +25,9 @@ export function getPresets() {
 				down: [
 					{
 						actionId: 'take',
+						options: {
+							v: 'main',
+						},
 					},
 				],
 				up: [],
@@ -49,6 +52,9 @@ export function getPresets() {
 				down: [
 					{
 						actionId: 'auto',
+						options: {
+							v: 'main',
+						},
 					},
 				],
 				up: [],
