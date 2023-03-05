@@ -95,7 +95,7 @@ class TricasterInstance extends InstanceBase {
 	async initConnection() {
 		let version = await this.awaitRequest('version')
 
-		if (version) {
+		if (version?.product_information) {
 			this.updateStatus('ok')
 			this.initStates()
 			this.initWebsocket()
@@ -413,8 +413,7 @@ class TricasterInstance extends InstanceBase {
 					this.updateStatus('ok')
 					return res.text()
 				} else if (res.status == 401) {
-					this.updateStatus('bad_config')
-					this.log('error', 'On the Tricaster Administrator Tools, turn off the LivePanel password')
+					this.updateStatus('bad_config', 'Authentication Error')
 				}
 			})
 			.then((data) => {
@@ -459,8 +458,7 @@ class TricasterInstance extends InstanceBase {
 				if (res.status == 200) {
 					this.updateStatus('ok')
 				} else if (res.status == 401) {
-					this.updateStatus('bad_config')
-					this.log('error', 'On the Tricaster Administrator Tools, turn off the LivePanel password')
+					this.updateStatus('bad_config', 'Authentication Error')
 				}
 			})
 			.catch((error) => {
