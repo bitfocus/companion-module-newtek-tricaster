@@ -1,31 +1,24 @@
 {
 	"name": "newtek-tricaster",
-	"version": "1.1.9",
-	"api_version": "1.0.0",
-	"keywords": [
-		"Switcher"
-	],
-	"manufacturer": "Newtek",
-	"product": "Tricaster",
-	"shortname": "tricaster",
-	"description": "Tricaster plugin for Companion",
+	"version": "2.0.0",
 	"main": "index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"format": "prettier -w ."
 	},
-	"author": "Jeffrey Davidsz <jeffrey.davidsz@vicreo.eu>",
+	"type": "module",
 	"license": "MIT",
 	"dependencies": {
-		"ping": "^0.4.0",
-		"util": "^0.12.3",
-		"xml2js": "^0.4.23"
-	},
-	"homepage": "https://github.com/bitfocus/companion-module-newtek-tricaster#readme",
-	"bugs": {
-		"url": "https://github.com/bitfocus/companion-module-newtek-tricaster/issues"
+		"@companion-module/base": "~1.2.1",
+		"fast-xml-parser": "^4.1.2",
+		"node-fetch": "^3.3.0",
+		"ws": "^8.12.1"
 	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/bitfocus/companion-module-newtek-tricaster.git"
-	}
+	},
+	"devDependencies": {
+		"@companion-module/tools": "^1.1.0"
+	},
+	"prettier": "@companion-module/tools/.prettierrc.json"
 }

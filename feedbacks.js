@@ -1,122 +1,101 @@
-const { resolve } = require('app-root-path')
+import { combineRgb } from '@companion-module/base'
 
-exports.initFeedbacks = function () {
+export function getFeedbacks() {
 	const feedbacks = {}
 
-	const feedbackColorPreview = {
-		color: this.rgb(255, 255, 255),
-		bgcolor: this.rgb(0, 255, 0),
-	}
-
-	const feedbackColorProgram = {
-		color: this.rgb(255, 255, 255),
-		bgcolor: this.rgb(255, 0, 0),
-	}
+	const ColorRed = combineRgb(200, 0, 0)
+	const ColorGreen = combineRgb(0, 200, 0)
 
 	feedbacks.tally_PGM = {
 		type: 'boolean',
-		label: 'Change style from program source',
+		name: 'Change style from program source',
 		description: 'When source is on-air, button style will change',
-		style: feedbackColorProgram,
+		defaultStyle: { bgcolor: ColorRed },
 		options: [
 			{
 				type: 'dropdown',
 				label: 'Source',
 				id: 'src',
 				choices: this.inputs,
-				default: 0,
+				default: '0',
 			},
 		],
+		callback: (feedback) => {
+			let source = this.inputs.find((el) => el.id == feedback.options.src)
+			if (source?.on_pgm === 'true') {
+				return true
+			}
+		},
 	}
 
 	feedbacks.tally_PVW = {
 		type: 'boolean',
-		label: 'Change style from preview source',
+		name: 'Change style from preview source',
 		description: 'When source is on preview bus, button style will change',
-		style: feedbackColorPreview,
+		defaultStyle: { bgcolor: ColorGreen },
 		options: [
 			{
 				type: 'dropdown',
 				label: 'Source',
 				id: 'src',
 				choices: this.inputs,
-				default: 0,
+				default: '0',
 			},
 		],
+		callback: (feedback) => {
+			let source = this.inputs.find((el) => el.id == feedback.options.src)
+			if (source?.on_prev === 'true') {
+				return true
+			}
+		},
 	}
 
-	feedbacks.tally_record = {
+	feedbacks.recording = {
 		type: 'boolean',
-		label: 'Change style when recording',
+		name: 'Change style when recording',
 		description: 'When recording, button style will change',
-		style: feedbackColorProgram,
+		defaultStyle: { bgcolor: ColorRed },
+		options: [],
+		callback: () => {
+			if (this.switcher.recording) {
+				return true
+			}
+		},
 	}
 
-	feedbacks.tally_streaming = {
+	feedbacks.streaming = {
 		type: 'boolean',
-		label: 'Change style when streaming',
+		name: 'Change style when streaming',
 		description: 'When streaming, button style will change',
-		style: feedbackColorProgram,
+		defaultStyle: { bgcolor: ColorRed },
+		options: [],
+		callback: () => {
+			if (this.switcher.streaming) {
+				return true
+			}
+		},
 	}
 
-	let playMediaChoices = []
-
-	this.mediaSourceNames.forEach((source) => {
-		playMediaChoices.push({
-			id: `${source.id}_play`,
-			label: `${source.label}`,
-		})
-	})
-
-	feedbacks.play_media = {
+	feedbacks.mediaPlaying = {
 		type: 'boolean',
-		label: 'Change style when player is active',
+		name: 'Change style when media player is active',
 		description: 'When media state is on play, button style will change',
-		style: feedbackColorPreview,
+		defaultStyle: { bgcolor: ColorGreen },
 		options: [
 			{
 				type: 'dropdown',
 				label: 'Media Player',
 				id: 'target',
-				choices: playMediaChoices,
-				default: 'ddr1_play',
+				choices: this.mediaSourceNames,
+				default: 'ddr1',
 			},
 		],
+		callback: (feedback) => {
+			if (this.shortcut_states[`${feedback.options.target}_play`] == 'true') {
+				return true
+			}
+		},
 	}
 
 	return feedbacks
-}
-
-exports.executeFeedback = function (feedback, bank) {
-	if (feedback.type === 'tally_PGM') {
-		if (this.tallyPGM[feedback.options.src] == 'true') {
-			return true
-		}
-	}
-
-	if (feedback.type === 'tally_PVW') {
-		if (this.tallyPVW[feedback.options.src] == 'true') {
-			return true
-		}
-	}
-
-	if (feedback.type === 'tally_record') {
-		if (this.switcher['recording']) {
-			return true
-		}
-	}
-
-	if (feedback.type === 'tally_streaming') {
-		if (this.switcher['streaming']) {
-			return true
-		}
-	}
-
-	if (feedback.type === 'play_media') {
-		if (this.shortcut_states[feedback.options.target] == 'true') {
-			return true
-		}
-	}
-
-	return false
 }

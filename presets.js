@@ -1,329 +1,398 @@
-exports.getPresets = function () {
-	let presets = []
-	const foregroundColor = this.rgb(255, 255, 255)
-	const backgroundColor = this.rgb(0, 0, 0)
+import { combineRgb } from '@companion-module/base'
 
-	/**
-	 * Take
-	 */
-	presets.push({
+export function getPresets() {
+	const ColorWhite = combineRgb(255, 255, 255)
+	const ColorBlack = combineRgb(0, 0, 0)
+	const ColorRed = combineRgb(200, 0, 0)
+	const ColorGreen = combineRgb(0, 200, 0)
+	const ColorOrange = combineRgb(255, 102, 0)
+
+	let presets = {}
+
+	presets.take = {
+		type: 'button',
 		category: 'Basic',
-		label: 'TAKE',
-		bank: {
-			style: 'text',
+		name: 'TAKE',
+		options: {},
+		style: {
 			text: 'TAKE',
 			size: '14',
-			color: foregroundColor,
-			bgcolor: this.rgb(255, 0, 0),
+			color: ColorWhite,
+			bgcolor: ColorRed,
 		},
-		actions: [
+		steps: [
 			{
-				action: 'take',
+				down: [
+					{
+						actionId: 'take',
+						options: {
+							v: 'main',
+						},
+					},
+				],
+				up: [],
 			},
 		],
-	})
-	/**
-	 * Auto
-	 */
-	presets.push({
+		feedbacks: [],
+	}
+
+	presets.auto = {
+		type: 'button',
 		category: 'Basic',
-		label: 'AUTO',
-		bank: {
-			style: 'text',
+		name: 'AUTO',
+		options: {},
+		style: {
 			text: 'AUTO',
 			size: '14',
-			color: foregroundColor,
-			bgcolor: this.rgb(255, 0, 0),
+			color: ColorWhite,
+			bgcolor: ColorRed,
 		},
-		actions: [
+		steps: [
 			{
-				action: 'auto',
+				down: [
+					{
+						actionId: 'auto',
+						options: {
+							v: 'main',
+						},
+					},
+				],
+				up: [],
 			},
 		],
-	})
-	/**
-	 * Auto dsk
-	 */
-	presets.push({
+		feedbacks: [],
+	}
+
+	presets.autoDsk = {
+		type: 'button',
 		category: 'Basic',
-		label: 'AUTO DSK',
-		bank: {
-			style: 'text',
+		name: 'AUTO DSK',
+		options: {},
+		style: {
 			text: 'AUTO DSK1',
 			size: '14',
-			color: foregroundColor,
-			bgcolor: this.rgb(255, 0, 0),
+			color: ColorWhite,
+			bgcolor: ColorBlack,
 		},
-		actions: [
+		steps: [
 			{
-				action: 'auto_dsk',
-				options: {
-					dsk: 'dsk1',
-				},
+				down: [
+					{
+						actionId: 'auto_dsk',
+						options: {
+							dsk: 'dsk1',
+						},
+					},
+				],
+				up: [],
 			},
 		],
-	})
-	/**
-	 * Record
-	 */
-	presets.push({
+		feedbacks: [],
+	}
+
+	presets.record = {
+		type: 'button',
 		category: 'Basic',
-		label: 'REC',
-		bank: {
-			style: 'text',
+		name: 'REC',
+		options: {},
+		style: {
 			text: 'REC',
 			size: '14',
-			color: foregroundColor,
-			bgcolor: backgroundColor,
+			color: ColorWhite,
+			bgcolor: ColorBlack,
 		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'record',
+						options: {
+							record: 'toggle',
+						},
+					},
+				],
+				up: [],
+			},
+		],
 		feedbacks: [
 			{
-				type: 'tally_record',
+				feedbackId: 'recording',
 				style: {
-					bgcolor: this.rgb(255, 0, 0),
-					color: this.rgb(255, 255, 255),
+					bgcolor: ColorRed,
+					color: ColorWhite,
 				},
 			},
 		],
-		actions: [
-			{
-				action: 'record_start',
-			},
-		],
-		release_actions: [
-			{
-				action: 'record_stop',
-			},
-		],
-	})
-	/**
-	 * Stream
-	 */
-	presets.push({
+	}
+
+	presets.streamOn = {
+		type: 'button',
 		category: 'Basic',
-		label: 'STREAM',
-		bank: {
-			style: 'text',
+		name: 'STREAM',
+		options: {},
+		style: {
 			text: 'Stream On',
 			size: '14',
-			color: foregroundColor,
-			bgcolor: backgroundColor,
+			color: ColorWhite,
+			bgcolor: ColorBlack,
 		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'stream',
+						options: {
+							stream: 1,
+						},
+					},
+				],
+				up: [],
+			},
+		],
 		feedbacks: [
 			{
-				type: 'tally_streaming',
+				feedbackId: 'streaming',
 				style: {
-					bgcolor: this.rgb(255, 0, 0),
-					color: this.rgb(255, 255, 255),
+					bgcolor: ColorRed,
+					color: ColorWhite,
 				},
 			},
 		],
-		actions: [
-			{
-				action: 'streaming',
-				options: {
-					force: '1',
-				},
-			},
-		],
-	})
-	presets.push({
+	}
+
+	presets.streamOff = {
+		type: 'button',
 		category: 'Basic',
-		label: 'STREAM',
-		bank: {
-			style: 'text',
+		name: 'STREAM',
+		options: {},
+		style: {
 			text: 'Stream Off',
 			size: '14',
-			color: foregroundColor,
-			bgcolor: backgroundColor,
+			color: ColorWhite,
+			bgcolor: ColorBlack,
 		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'stream',
+						options: {
+							stream: 0,
+						},
+					},
+				],
+				up: [],
+			},
+		],
 		feedbacks: [
 			{
-				type: 'tally_streaming',
+				feedbackId: 'streaming',
 				style: {
-					bgcolor: this.rgb(255, 0, 0),
-					color: this.rgb(255, 255, 255),
+					bgcolor: ColorRed,
+					color: ColorWhite,
 				},
 			},
 		],
-		actions: [
-			{
-				action: 'streaming',
-				options: {
-					force: '0',
-				},
-			},
-		],
-	})
+	}
 
 	// create presets for all inputs
-	this.inputs.forEach((element) => {
-		/**
-		 * Source on PGM
-		 */
-		presets.push({
+	this.inputs?.forEach((element) => {
+		presets[`${element.label}_pgm`] = {
+			type: 'button',
 			category: 'Source on PGM',
-			label: element.label,
-			bank: {
-				style: 'text',
+			name: element.label,
+			options: {},
+			style: {
 				text: element.label,
 				size: '14',
-				color: foregroundColor,
-				bgcolor: backgroundColor,
+				color: ColorWhite,
+				bgcolor: ColorBlack,
 			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'source_pgm',
+							options: {
+								source: element.id,
+							},
+						},
+					],
+					up: [],
+				},
+			],
 			feedbacks: [
 				{
-					type: 'tally_PGM',
+					feedbackId: 'tally_PGM',
 					options: {
 						src: element.id,
 					},
 					style: {
-						bgcolor: this.rgb(255, 0, 0),
-						color: this.rgb(255, 255, 255),
+						bgcolor: ColorRed,
+						color: ColorWhite,
 					},
 				},
 			],
-			actions: [
-				{
-					action: 'source_pgm',
-					options: {
-						source: element.id,
-					},
-				},
-			],
-		})
-		/**
-		 * Source on PVW
-		 */
-		presets.push({
-			category: 'Source on PVW',
-			label: element.label,
-			bank: {
-				style: 'text',
-				text: element.label,
-				size: '14',
-				color: foregroundColor,
-				bgcolor: backgroundColor,
-			},
-			feedbacks: [
-				{
-					type: 'tally_PVW',
-					options: {
-						src: element.id,
-					},
-					style: {
-						bgcolor: this.rgb(0, 255, 0),
-						color: this.rgb(255, 255, 255),
-					},
-				},
-			],
-			actions: [
-				{
-					action: 'source_pvw',
-					options: {
-						source: element.id,
-					},
-				},
-			],
-		})
-		/**
-		 * Source on ME/1
-		 */
-		presets.push({
-			category: 'Source on M/E 1',
-			label: element.label,
-			bank: {
-				style: 'text',
-				text: element.label,
-				size: '14',
-				color: foregroundColor,
-				bgcolor: backgroundColor,
-			},
-			actions: [
-				{
-					action: 'source_to_v',
-					options: {
-						destination: 'v1_a_row',
-						source: element.id,
-					},
-				},
-			],
-		})
-	})
+		}
 
-	this.mediaSourceNames.forEach((source) => {
-		/**
-		 * Source on PGM
-		 */
-		presets.push({
+		presets[`${element.label}_pvw`] = {
+			type: 'button',
+			category: 'Source on PVW',
+			name: element.label,
+			options: {},
+			style: {
+				text: element.label,
+				size: '14',
+				color: ColorWhite,
+				bgcolor: ColorBlack,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'source_pvw',
+							options: {
+								source: element.id,
+							},
+						},
+					],
+					up: [],
+				},
+			],
+			feedbacks: [
+				{
+					feedbackId: 'tally_PVW',
+					options: {
+						src: element.id,
+					},
+					style: {
+						bgcolor: ColorGreen,
+						color: ColorWhite,
+					},
+				},
+			],
+		}
+
+		presets[`${element.label}_me1`] = {
+			type: 'button',
+			category: 'Source on M/E 1',
+			name: element.label,
+			options: {},
+			style: {
+				text: element.label,
+				size: '14',
+				color: ColorWhite,
+				bgcolor: ColorBlack,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'source_to_v',
+							options: {
+								destination: 'v1_a_row',
+								source: element.id,
+							},
+						},
+					],
+					up: [],
+				},
+			],
+			feedbacks: [],
+		}
+	})
+	this.mediaSourceNames?.forEach((source) => {
+		presets[`${source.label}_togglePlay`] = {
+			type: 'button',
 			category: 'Media Players',
-			label: `${source.label} Toggle Play`,
-			bank: {
-				style: 'text',
+			name: `${source.label} Toggle Play`,
+			options: {},
+			style: {
 				text: `${source.label} Toggle Play`,
 				size: '14',
-				color: foregroundColor,
-				bgcolor: backgroundColor,
+				color: ColorWhite,
+				bgcolor: ColorBlack,
 			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'media_target',
+							options: {
+								target: `${source.id}_play_toggle`,
+							},
+						},
+					],
+					up: [],
+				},
+			],
 			feedbacks: [
 				{
-					type: 'play_media',
+					feedbackId: 'mediaPlaying',
 					options: {
-						target: `${source.id}_play`,
+						target: `${source.id}`,
 					},
 					style: {
-						bgcolor: this.rgb(0, 255, 0),
-						color: this.rgb(255, 255, 255),
+						bgcolor: ColorGreen,
+						color: ColorWhite,
 					},
 				},
 			],
-			actions: [
-				{
-					action: 'media_target',
-					options: {
-						target: `${source.id}_play_toggle`,
-					},
-				},
-			],
-		})
-		presets.push({
+		}
+
+		presets[`${source.label}_back`] = {
+			type: 'button',
 			category: 'Media Players',
-			label: `${source.label} Back`,
-			bank: {
-				style: 'text',
+			name: `${source.label} Back`,
+			options: {},
+			style: {
 				text: `${source.label} Back`,
 				size: '14',
-				color: foregroundColor,
-				bgcolor: backgroundColor,
+				color: ColorWhite,
+				bgcolor: ColorBlack,
 			},
-			actions: [
+			steps: [
 				{
-					action: 'media_target',
-					options: {
-						target: `${source.id}_back`,
-					},
+					down: [
+						{
+							actionId: 'media_target',
+							options: {
+								target: `${source.id}_back`,
+							},
+						},
+					],
+					up: [],
 				},
 			],
-		})
-		presets.push({
+			feedbacks: [],
+		}
+
+		presets[`${source.label}_forward`] = {
+			type: 'button',
 			category: 'Media Players',
-			label: `${source.label} Forward`,
-			bank: {
-				style: 'text',
+			name: `${source.label} Forward`,
+			options: {},
+			style: {
 				text: `${source.label} Forward`,
 				size: '14',
-				color: foregroundColor,
-				bgcolor: backgroundColor,
+				color: ColorWhite,
+				bgcolor: ColorBlack,
 			},
-			actions: [
+			steps: [
 				{
-					action: 'media_target',
-					options: {
-						target: `${source.id}_forward`,
-					},
+					down: [
+						{
+							actionId: 'media_target',
+							options: {
+								target: `${source.id}_forward`,
+							},
+						},
+					],
+					up: [],
 				},
 			],
-		})
+			feedbacks: [],
+		}
 	})
 
 	return presets

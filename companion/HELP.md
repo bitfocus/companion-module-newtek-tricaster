@@ -1,45 +1,48 @@
 ## companion-module-newtek-tricaster
 
-Allows you to control the Tricaster line of video production switchers from NewTek.
+This module allows you to control the Tricaster line of video production switchers from NewTek.
 
 ### Configuration
 
 - On the Tricaster under Administration Tools, turn off the LivePanel password
-- Enter the IP address of the Tricaster in the module settings
-- _Optional: To get variables from DataLink, enable polling in the module settings. The interval must be at least 500ms_
+- Enter the IP address or hostname of the Tricaster in the module settings
+- _Optional: To get variables from DataLink, enable "DataLink Variables" in the module settings"_
 
 ### Available Actions
 
 - Take
-- Auto transition (also on dsk)
+- Auto transition
 - Set Source to preview
 - Set Source to program
-- Set Source to V (ME)
+- Set Source to M/E
 - Set Source to DSK per ME (A & B bus)
-- Media options
+- Media actions
   - Play/Play Toggle/Stop/Back/Forward
 - Run System Macros
-- Trigger Custom Macros
-- Record start/stop
-- Streaming Toggle
-- Set a DataLink key/value
+- Run Custom Macros
+- Record (Toggle / Start / Stop)
+- Stream (Toggle / Start / Stop)
+- Set a DataLink value
 - Custom Shortcuts
 
 ### Available Feedbacks
 
 - Source Tally (Program and Preview)
 - Media Playing (DDRs, GFX, Stills, Titles, Sound)
-- Record
-- Stream
+- Recording
+- Streaming
 
 ### Available Variables
 
 - Product Name
 - Product Version
+- Hostname
+- Session Name
 - Source on Program
 - Source on Preview
-- Input Names
-- All DataLink key/value pairs _Note: must enable polling in the module settings_
+- Recording Status
+- Streaming Status
+- DataLink key/value pairs _Note: must enable "DataLink Variables" in the module settings_
 
 ### Available Presets
 

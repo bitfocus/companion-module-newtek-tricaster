@@ -1,11 +1,15 @@
 # companion-module-newtek-tricaster
 
-See HELP.md & LICENSE
+See [HELP.md](./companion/HELP.md) & LICENSE
 
+## Changelog
 
-## Documentation about the protocol ##
-[PDF](http://a6ce85f34b101e4ba428-38e91d4533ffbe5c8042650a77a3ed34.r56.cf1.rackcdn.com/TriCaster/AI%20Guide/Automation%20and%20Integration%20Guide.pdf)
+### v2.0.0
 
-## Help file for shortcuts ##
-[PDF](https://jonjones.co/blog/newtek-tricaster-network-control-advanced-edition/)
+- Major
+  - Updated for Companion v3 compatibility
 
+## Development Documentation
+
+- [API Protocol](http://a6ce85f34b101e4ba428-38e91d4533ffbe5c8042650a77a3ed34.r56.cf1.rackcdn.com/TriCaster/AI%20Guide/Automation%20and%20Integration%20Guide.pdf)
+- [Tricaster Shortcuts](https://jonjones.co/blog/newtek-tricaster-network-control-advanced-edition/)

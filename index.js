@@ -1,163 +1,154 @@
-const instance_skel = require('../../instance_skel')
-const tcp = require('../../tcp')
-const WebSocket = require('ws')
-const actions = require('./actions')
-const presets = require('./presets')
-const ping = require('ping')
-const parseString = require('xml2js').parseString
-const util = require('util')
-const { executeFeedback, initFeedbacks } = require('./feedbacks')
-const { findIndex } = require('lodash')
+import { InstanceBase, runEntrypoint } from '@companion-module/base'
+import { getActions } from './actions.js'
+import { getPresets } from './presets.js'
+import { getVariables } from './variables.js'
+import { getFeedbacks } from './feedbacks.js'
+import upgradeScripts from './upgrades.js'
 
-let debug
-let log
+import fetch from 'node-fetch'
+import WebSocket from 'ws'
+import { XMLParser } from 'fast-xml-parser'
+const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '', allowBooleanAttributes: true })
 
-class instance extends instance_skel {
-	/**
-	 * Main constructor
-	 * @param  {} system
-	 * @param  {} id
-	 * @param  {} config
-	 */
-	constructor(system, id, config) {
-		super(system, id, config)
-
-		Object.assign(this, {
-			...actions,
-			...presets,
-		})
-		this.session = false
-		this.switcher = []
-		this.inputs = []
-		this.system_macros = []
-		this.custom_macros = []
-		this.tally = []
-		this.tallyPVW = []
-		this.tallyPGM = []
-		this.datalink = []
-		this.shortcut_states = []
-		this.variables = []
-		this.mediaTargets = []
-		this.mediaSourceNames = []
-		this.meDestinations = []
-		this.meList = []
-		this.dskDestinations = []
-		this.createDskDestinations()
-		this.createMediaTargets()
-		this.createMeDestinations()
+class TricasterInstance extends InstanceBase {
+	constructor(internal) {
+		super(internal)
 	}
 
-	static GetUpgradeScripts() {
+	async init(config) {
+		this.config = config
+		this.updateStatus('connecting')
+
+		if (this.config.host) {
+			this.initConnection()
+		} else {
+			this.updateStatus('bad_config', 'Missing IP or hostname')
+			this.log('error', 'Please configure the IP address or hostname of your Tricaster in the module settings')
+		}
+	}
+
+	async destroy() {
+		if (this.pollDatalink) {
+			clearInterval(this.pollDatalink)
+		}
+		if (this.socket !== undefined) {
+			this.socket.destroy()
+			delete this.socket
+		}
+		if (this.ws !== undefined) {
+			this.ws.close(1000)
+			delete this.ws
+		}
+		if (this.websocketPing) {
+			clearInterval(this.websocketPing)
+		}
+		if (this.reconnect) {
+			clearInterval(this.reconnect)
+		}
+	}
+
+	getConfigFields() {
 		return [
-			instance_skel.CreateConvertToBooleanFeedbackUpgradeScript({
-				tally_PGM: true,
-				tally_PVW: true,
-				tally_record: true,
-				tally_streaming: true,
-				play_media: true,
-			}),
+			{
+				type: 'textinput',
+				id: 'host',
+				label: 'Tricaster IP or Hostname',
+				width: 6,
+			},
+			{
+				type: 'checkbox',
+				id: 'datalink',
+				label: 'DataLink Variables',
+				default: false,
+			},
 		]
 	}
 
-	createMeDestinations() {
-		this.meList.push({
-			id: `main`,
-			label: `Main`,
-		})
-		for (let index = 1; index < 9; index++) {
-			this.meDestinations.push({
-				id: `v${index}_a_row`,
-				label: `M/E ${index} PGM`,
-			})
-			this.meDestinations.push({
-				id: `v${index}_b_row`,
-				label: `M/E ${index} PVW`,
-			})
-			this.meList.push({
-				id: `v${index}`,
-				label: `M/E ${index}`,
-			})
-			for (let dsk = 1; dsk < 5; dsk++) {
-				this.dskDestinations.push({
-					id: `v${index}_dsk${dsk}`,
-					label: `M/E ${index} DSK ${dsk}`,
-				})
+	async configUpdated(config) {
+		this.config = config
+		this.updateStatus('connecting')
+		clearInterval(this.pollDatalink)
+
+		this.init(config)
+	}
+
+	initVariables() {
+		const variables = getVariables.bind(this)()
+		this.setVariableDefinitions(variables)
+	}
+
+	initFeedbacks() {
+		const feedbacks = getFeedbacks.bind(this)()
+		this.setFeedbackDefinitions(feedbacks)
+	}
+
+	initPresets() {
+		const presets = getPresets.bind(this)()
+		this.setPresetDefinitions(presets)
+	}
+
+	initActions() {
+		const actions = getActions.bind(this)()
+		this.setActionDefinitions(actions)
+	}
+
+	async initConnection() {
+		let version = await this.awaitRequest('version')
+
+		if (version?.product_information) {
+			this.updateStatus('ok')
+			this.initStates()
+			this.initWebsocket()
+
+			this.initVariables()
+			this.initFeedbacks()
+			this.initPresets()
+
+			this.processData(version)
+			this.getInputs()
+
+			this.sendGetRequest('dictionary?key=macros_list')
+			this.sendGetRequest('dictionary?key=shortcut_states')
+
+			if (this.config.datalink) {
+				this.sendGetRequest('datalink')
+				if (this.pollDatalink) {
+					clearInterval(this.pollDatalink)
+				}
+				this.pollDatalink = setInterval(() => {
+					this.sendGetRequest('datalink')
+				}, 1000)
 			}
+		} else {
+			this.updateStatus('connection_failure')
+			this.log('error', 'Unable to connect to Tricaster. Check your device address in the module settings')
 		}
 	}
 
-	createDskDestinations() {
-		for (let dsk = 1; dsk < 5; dsk++) {
-			this.dskDestinations.push({
-				id: `main_dsk${dsk}`,
-				label: `main dsk ${dsk}`,
-			})
-		}
-	}
-	/**
-	 * Creating of media targets
-	 */
-	createMediaTargets() {
-		for (let index = 1; index < 5; index++) {
-			this.mediaTargets.push({
-				id: `ddr${index}_play`,
-				label: `DDR ${index} Play`,
-			})
-			this.mediaTargets.push({
-				id: `ddr${index}_play_toggle`,
-				label: `DDR ${index} Play Toggle`,
-			})
-			this.mediaTargets.push({
-				id: `ddr${index}_stop`,
-				label: `DDR ${index} Stop`,
-			})
-			this.mediaTargets.push({
-				id: `ddr${index}_back`,
-				label: `DDR ${index} Back`,
-			})
-			this.mediaTargets.push({
-				id: `ddr${index}_forward`,
-				label: `DDR ${index} Forward`,
-			})
-			this.mediaTargets.push({
-				id: `ddr${index}_mark_in`,
-				label: `DDR ${index} Mark In`,
-			})
-			this.mediaTargets.push({
-				id: `ddr${index}_mark_out`,
-				label: `DDR ${index} Mark Out`,
-			})
-			this.mediaSourceNames.push({
-				id: `ddr${index}`,
-				label: `DDR ${index}`,
-			})
-		}
-		for (let index = 1; index < 3; index++) {
-			this.mediaTargets.push({
-				id: `gfx${index}_play`,
-				label: `GFX ${index} Play`,
-			})
-			this.mediaTargets.push({
-				id: `gfx${index}_play_toggle`,
-				label: `GFX ${index} Play Toggle`,
-			})
-			this.mediaTargets.push({
-				id: `gfx${index}_stop`,
-				label: `GFX ${index} Stop`,
-			})
-			this.mediaTargets.push({
-				id: `gfx${index}_back`,
-				label: `GFX ${index} Back`,
-			})
-			this.mediaTargets.push({
-				id: `gfx${index}_forward`,
-				label: `GFX ${index} Forward`,
-			})
-			this.mediaSourceNames.push({
-				id: `gfx${index}`,
-				label: `GFX ${index}`,
-			})
-		}
+	initStates() {
+		//Switcher
+		this.switcher = {}
+		this.system_macros = []
+		this.custom_macros = []
+		this.datalink = []
+		this.shortcut_states = []
+		this.transitions = [
+			{ id: '-1', label: 'Cut' },
+			{ id: '0', label: 'Fade' },
+		]
+		//M/Es
+		this.meDestinations = []
+		this.meList = [
+			{
+				id: `main`,
+				label: `Main`,
+			},
+		]
+		//Inputs
+		this.inputs = []
+		this.mediaTargets = []
+		this.mediaSourceNames = []
+		//Stills
 		this.mediaTargets.push({
 			id: `stills_play`,
 			label: `Stills Play`,
@@ -182,7 +173,7 @@ class instance extends instance_skel {
 			id: `stills_forward`,
 			label: `Stills Forward`,
 		})
-
+		//Titles
 		this.mediaTargets.push({
 			id: `titles_play`,
 			label: `Titles Play`,
@@ -211,232 +202,161 @@ class instance extends instance_skel {
 			id: `sound`,
 			label: `Sound`,
 		})
-	}
-	/**
-	 * The main config fields for user input like IP address
-	 */
-	config_fields() {
-		return [
-			{
-				type: 'text',
-				id: 'info',
-				width: 12,
-				label: 'Information',
-				value: 'This module connects to a Tricaster.',
-			},
-			{
-				type: 'textinput',
-				id: 'host',
-				label: 'Tricaster IP',
-				width: 6,
-				regex: this.REGEX_IP,
-			},
-			{
-				type: 'text',
-				id: 'info',
-				width: 10,
-				label: 'Polling Information',
-				value: 'Polling is required for DataLink variables (0 for off, interval must be 500ms or larger)',
-			},
-			{
-				type: 'textinput',
-				id: 'pollInterval',
-				label: 'Polling Interval',
-				width: 4,
-				default: '0',
-			},
-		]
-	}
-
-	/**
-	 * Set all the actions
-	 * @param  {} system
-	 */
-	actions(system) {
-		this.setActions(this.getActions())
-	}
-
-	/**
-	 * Handle stuff when modules gets destroyed
-	 */
-	destroy() {
-		debug('destroy', this.id)
-		this.active = false
-		if (this.pollAPI) {
-			clearInterval(this.pollAPI)
-		}
-		if (this.socket !== undefined) {
-			this.socket.destroy()
-			delete this.socket
-		}
-		if (this.ws !== undefined) {
-			this.ws.close(1000)
-			delete this.ws
-		}
-		if (this.websocketPing) {
-			clearInterval(this.websocketPing)
-		}
-		if (this.reconnect) {
-			clearInterval(this.reconnect)
-		}
-	}
-
-	/**
-	 * Start of the module
-	 */
-	init() {
-		debug = this.debug
-		log = this.log
-		this.active = true
-
-		this.status(this.STATUS_UNKNOWN)
-
-		this.set_variablesDefinition()
-		this.connections()
-	}
-
-	connections() {
-		// Settings must be made first
-		if (this.config.host !== undefined) {
-			this.init_TCP()
-			this.init_feedbacks()
-			this.init_presets()
-			this.status(this.STATE_OK)
-		} else {
-			this.status(this.STATE_ERROR, 'No ping reply from ' + this.config.host)
-			this.log('error', 'Network error: cannot reach IP address')
-		}
-	}
-	/**
-	 * Called when config has been updated
-	 * @param  {} config
-	 */
-	updateConfig(config) {
-		this.config = config
-		this.status(this.STATUS_UNKNOWN)
-		clearInterval(this.pollAPI)
-
-		this.init_feedbacks()
-		this.connections()
-		this.set_variablesDefinition()
-	}
-
-	set_variablesDefinition(extra) {
-		if (this.variables.length == 0) {
-			this.variables = [
-				{
-					name: 'product_name',
-					label: 'Product name',
-				},
-				{
-					name: 'product_version',
-					label: 'Product version',
-				},
-				{
-					name: 'pgm_source',
-					label: 'Source on Program',
-				},
-				{
-					name: 'pvw_source',
-					label: 'Source on Preview',
-				},
-				{
-					name: 'recording',
-					label: 'Recording',
-				},
-				{
-					name: 'streaming',
-					label: 'Streaming',
-				},
-			]
-		}
-
-		if (extra != undefined && Array.isArray(extra)) {
-			extra.forEach((element) => {
-				const index = this.variables.findIndex((el) => el.name == element.name)
-				if (index == -1) this.variables.push(element)
+		//DSK
+		this.dskDestinations = []
+		for (let dsk = 1; dsk < 5; dsk++) {
+			this.dskDestinations.push({
+				id: `main_dsk${dsk}`,
+				label: `main dsk ${dsk}`,
 			})
-			this.setVariableDefinitions(this.variables)
-		} else {
-			this.setVariableDefinitions(this.variables)
 		}
 	}
-	/**
-	 * Set the TCP connection to send shortcuts to the mixer, should be the fastest option
-	 */
-	init_TCP() {
-		this.config.port = 5951 // Fixed port
-		this.inputBuffer = Buffer.from('')
 
-		if (this.config.host !== undefined) {
-			if (this.socket !== undefined) {
-				this.socket.destroy()
-				delete this.socket
-			}
+	async getInputs() {
+		let tallyData = await this.awaitRequest('dictionary?key=tally')
+		let states = await this.awaitRequest('dictionary?key=shortcut_states')
+		let transitions = await this.awaitRequest('dictionary?key=switcher_ui_effects')
+		if (tallyData && states) {
+			tallyData.tally.column.forEach((input) => {
+				//Create Inputs
+				//Regex prevents excess DDR/GFX A/B Inputs from being visible
+				if (!input.name.match(/[d,g][d,f][r,x][1-2](_)[a,b]/i)) {
+					let longName = states.shortcut_states.shortcut_state.find((x) => x.name == `${input.name}_long_name`)
+					let shortName = states.shortcut_states.shortcut_state.find((x) => x.name == `${input.name}_short_name`)
 
-			this.status(this.STATE_WARNING, 'Connecting')
-			this.socket = new tcp(this.config.host, this.config.port)
+					if (longName) {
+						longName = longName.value
 
-			this.socket.on('status_change', (status, message) => {
-				this.status(status, message) // Update status when something happens
-			})
-			this.socket.on('error', (err) => {
-				if (err.errno === 'ECONNREFUSED') {
-					this.log('TCP error: ' + err)
-					this.status(this.STATE_ERROR, err)
-				} else if (this.session) {
-					this.status(this.STATE_ERROR, err)
-					debug('Network error', err)
-					this.log('error', 'Network error: ' + err.message)
+						if (shortName) {
+							shortName = shortName.value
+						} else {
+							shortName = input.name
+						}
+
+						this.inputs.push({
+							id: input.index,
+							label: longName,
+							inputName: input.name,
+							long_name: longName,
+							short_name: shortName,
+							on_pgm: input.on_pgm,
+							on_prev: input.on_prev,
+						})
+					}
+				}
+				//Create M/Es
+				if (input.name.match(/v[0-9]/i)) {
+					let index = input.name.replace(/v/, '')
+					this.meDestinations.push({
+						id: `v${index}_a_row`,
+						label: `M/E ${index} PGM`,
+					})
+					this.meDestinations.push({
+						id: `v${index}_b_row`,
+						label: `M/E ${index} PVW`,
+					})
+					this.meList.push({
+						id: `v${index}`,
+						label: `M/E ${index}`,
+					})
+					for (let dsk = 1; dsk < 5; dsk++) {
+						this.dskDestinations.push({
+							id: `v${index}_dsk${dsk}`,
+							label: `M/E ${index} DSK ${dsk}`,
+						})
+					}
+				}
+				//Create DDR
+				if (input.name.match(/^ddr[0-4]$/i)) {
+					let index = input.name.replace(/ddr/, '')
+					this.mediaTargets.push({
+						id: `ddr${index}_play`,
+						label: `DDR ${index} Play`,
+					})
+					this.mediaTargets.push({
+						id: `ddr${index}_play_toggle`,
+						label: `DDR ${index} Play Toggle`,
+					})
+					this.mediaTargets.push({
+						id: `ddr${index}_stop`,
+						label: `DDR ${index} Stop`,
+					})
+					this.mediaTargets.push({
+						id: `ddr${index}_back`,
+						label: `DDR ${index} Back`,
+					})
+					this.mediaTargets.push({
+						id: `ddr${index}_forward`,
+						label: `DDR ${index} Forward`,
+					})
+					this.mediaTargets.push({
+						id: `ddr${index}_mark_in`,
+						label: `DDR ${index} Mark In`,
+					})
+					this.mediaTargets.push({
+						id: `ddr${index}_mark_out`,
+						label: `DDR ${index} Mark Out`,
+					})
+					this.mediaSourceNames.push({
+						id: `ddr${index}`,
+						label: `DDR ${index}`,
+					})
+				}
+				//Create GFX
+				if (input.name.match(/^gfx[0-4]$/i)) {
+					let index = input.name.replace(/gfx/, '')
+					this.mediaTargets.push({
+						id: `gfx${index}_play`,
+						label: `GFX ${index} Play`,
+					})
+					this.mediaTargets.push({
+						id: `gfx${index}_play_toggle`,
+						label: `GFX ${index} Play Toggle`,
+					})
+					this.mediaTargets.push({
+						id: `gfx${index}_stop`,
+						label: `GFX ${index} Stop`,
+					})
+					this.mediaTargets.push({
+						id: `gfx${index}_back`,
+						label: `GFX ${index} Back`,
+					})
+					this.mediaTargets.push({
+						id: `gfx${index}_forward`,
+						label: `GFX ${index} Forward`,
+					})
+					this.mediaSourceNames.push({
+						id: `gfx${index}`,
+						label: `GFX ${index}`,
+					})
 				}
 			})
-
-			this.socket.on('connect', () => {
-				this.status(this.STATE_OK)
-				this.session = true
-				// Ask the mixer to give us variable (register/state) updates on connection
-				this.socket.send(`<register name="NTK_states"/>\n`)
-				// Get all initial info needed
-				this.sendGetRequest(`http://${this.config.host}/v1/version`) // Fetch mixer info
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch initial input info
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macros
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher changes
-				if (this.config.pollInterval != 0) {
-					this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalink stuff
-					if (this.pollAPI) {
-						clearInterval(this.pollAPI)
+		}
+		if (transitions) {
+			transitions.switcher_ui_effects.switcher.forEach((switcher) => {
+				if (switcher.name === 'main') {
+					let int = 0
+					for (let x in switcher.effect_bin) {
+						let transition = switcher.effect_bin[x]
+						let name = transition?.effect.match(/[^\\]+\.trans$/i)
+						if (name) {
+							name = name[0].replace('.trans', '')
+							this.transitions.push({ id: ++int, label: name })
+						}
 					}
-					this.pollAPI = setInterval(
-						() => {
-							this.sendGetRequest(`http://${this.config.host}/v1/datalink`) // Fetch datalink stuff
-						},
-						this.config.pollInterval < 500 ? 500 : this.config.pollInterval
-					)
 				}
-				this.debug('TriCaster shortcut socket Opened')
-				this.init_websocket_listener()
-			})
-
-			this.socket.on('data', (inputData) => {
-				clearTimeout(this.errorTimer)
-
-				this.inputBuffer = Buffer.concat([this.inputBuffer, inputData])
-
-				parseString(Buffer.from('<root>' + this.inputBuffer.toString() + '</root>'), (err, result) => {
-					if (!err) {
-						this.inputBuffer = Buffer.from('')
-						this.incomingData(result.root)
-					} else {
-						this.errorTimer = setTimeout(() => {
-							throw 'Timeout getting a complete xml packet'
-						}, 500)
-					}
-				})
 			})
 		}
+
+		this.sendGetRequest('dictionary?key=switcher') //Wait until input names are defined before getting pgm/prv info
+
+		this.initActions()
+		this.initFeedbacks()
+		this.initPresets()
+		this.checkFeedbacks('tally_PGM', 'tally_PVW')
 	}
 
-	init_websocket_listener() {
+	initWebsocket() {
 		clearInterval(this.reconnect)
 
 		if (this.ws !== undefined) {
@@ -444,12 +364,10 @@ class instance extends instance_skel {
 			delete this.ws
 		}
 
-		const url = 'ws://' + this.config.host + '/v1/change_notifications'
-		this.ws = new WebSocket(url)
+		this.ws = new WebSocket(`ws://${this.config.host}/v1/change_notifications`)
 
 		this.ws.on('open', () => {
 			// ping server every 15 seconds to keep connection open
-
 			this.websocketPing = setInterval(() => {
 				if (this.ws) {
 					if (this.ws.readyState == 1) {
@@ -463,385 +381,219 @@ class instance extends instance_skel {
 					clearInterval(this.websocketPing)
 				}
 			}, 15000)
-
-			this.debug('TriCaster Listener WebSocket Opened')
 		})
 
-		this.ws.on('message', (msg) => {
-			this.debug(msg)
-			if (msg.search('tally') != '-1') {
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=tally`) // Fetch tally changes
-			}
-			if (msg.search('switcher') != '-1') {
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher changes
-			}
-			if (msg.search('macros_list') != '-1') {
-				this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=macros_list`) // Fetch macro changes
+		this.ws.on('message', (data, isBinary) => {
+			let msg = isBinary ? data : data.toString()
+
+			if (msg) {
+				this.sendGetRequest(`dictionary?key=${msg}`)
 			}
 		})
 
 		this.ws.on('close', (code) => {
 			if (code !== 1000) {
-				this.debug('error', `Websocket closed:  ${code}`)
 				this.reconnect = setInterval(() => {
-					this.init_websocket_listener()
+					this.initWebsocket()
 				}, 500)
 			}
 		})
 
-		this.ws.on('error', (msg) => {
-			this.debug('Error', msg.data)
+		this.ws.on('error', (data, isBinary) => {
+			let msg = isBinary ? data : data.toString()
+			this.log('debug', msg)
 		})
 	}
 
-	/**
-	 * @param  {} states
-	 */
-	shortcutStatesIngest(states) {
-		states?.forEach((element) => {
-			if (element['$']['name'].match(/_short_name/)) {
-				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -11))
-				if (index != -1) {
-					this.inputs[index].short_name = element['$']['value']
-					this.setVariable(this.inputs[index].name, element['$']['value'])
+	sendGetRequest(request) {
+		let url = `http://${this.config.host}/v1/${request}`
+		fetch(url)
+			.then((res) => {
+				if (res.status == 200) {
+					this.updateStatus('ok')
+					return res.text()
+				} else if (res.status == 401) {
+					this.updateStatus('bad_config', 'Authentication Error')
 				}
-				const va_index = this.meDestinations.findIndex(
-					(el) => el.label.slice(0, -6) == element['$']['name'].slice(0, -11)
-				)
-				if (va_index != -1) {
-					this.meDestinations[va_index].label = element['$']['value'] + ' a bus'
+			})
+			.then((data) => {
+				let object = parser.parse(data)
+				this.processData(object)
+			})
+			.catch((error) => {
+				let errorText = String(error)
+				if (errorText.match('ETIMEDOUT') || errorText.match('ENOTFOUND') || errorText.match('ECONNREFUSED')) {
+					this.updateStatus('connection_failure')
 				}
-				const vb_index = this.meDestinations.findIndex(
-					(el) => el.label.slice(0, -6) == element['$']['name'].slice(0, -11)
-				)
-				if (vb_index != -1) {
-					this.meDestinations[vb_index].label = element['$']['value'] + ' b bus'
-				}
-				this.actions()
-				this.init_presets()
-			} else if (element['$']['name'].match(/_long_name/)) {
-				const index = this.inputs.findIndex((el) => el.name == element['$']['name'].slice(0, -10))
-				if (index != -1) {
-					this.inputs[index].long_name = element['$']['value']
-					this.inputs[index].label = element['$']['value']
-				}
-				this.actions()
-				this.init_presets()
-			} else if (element['$']['name'].match(/record_toggle/)) {
-				this.switcher['recording'] = element['$']['value'] == '1' ? true : false
-				this.setVariable('recording', element['$']['value'] == '1' ? true : false)
-				this.checkFeedbacks('tally_record')
-			} else if (element['$']['name'].match(/streaming_toggle/)) {
-				this.switcher['streaming'] = element['$']['value'] == '1' ? true : false
-				this.setVariable('streaming', element['$']['value'] == '1' ? true : false)
-				this.checkFeedbacks('tally_streaming')
-			} else if (
-				element['$']['name'].match(/ddr1_play/) ||
-				element['$']['name'].match(/ddr2_play/) ||
-				element['$']['name'].match(/ddr3_play/) ||
-				element['$']['name'].match(/ddr4_play/) ||
-				element['$']['name'].match(/gfx1_play/) ||
-				element['$']['name'].match(/gfx2_play/) ||
-				element['$']['name'].match(/stills_play/) ||
-				element['$']['name'].match(/titles_play/) ||
-				element['$']['name'].match(/sound_play/)
-			) {
-				this.shortcut_states[element['$']['name']] = element['$']['value']
-				this.checkFeedbacks('play_media')
-			}
-		})
-
-		this.sendGetRequest(`http://${this.config.host}/v1/dictionary?key=switcher`) // Fetch switcher changes for proper PGM/PVW button variable names on start-up
+				this.log('debug', errorText)
+			})
 	}
-	/**
-	 * @param  {} data
-	 */
-	incomingData(data) {
-		if (data.shortcut_states !== undefined) {
-			if (Array.isArray(data.shortcut_states)) {
-				data.shortcut_states.forEach((states) => {
-					this.shortcutStatesIngest(states.shortcut_state)
-				})
-			} else {
-				this.shortcutStatesIngest(data.shortcut_states.shortcut_state)
-			}
-		} else if (data.shutdown) {
-			this.log('warn', 'Tricaster session closed')
-			this.session = false
-		} else {
-			this.debug('UNKNOWN INCOMING DATA', util.inspect(data, false, null, true))
+
+	async awaitRequest(request) {
+		let url = `http://${this.config.host}/v1/${request}`
+
+		try {
+			let result = await fetch(url)
+			let data = await result.text()
+			let object = await parser.parse(data)
+			return object
+		} catch (error) {
+			this.log('debug', error)
 		}
 	}
 
-	/**
-	 * Initialize presets
-	 * @param  {} updates
-	 */
-	init_presets(updates) {
-		this.setPresetDefinitions(this.getPresets())
-	}
+	sendCommand(name, value, custom) {
+		let cmd = `shortcut?name=${name}`
+		if (value) {
+			cmd = `shortcut?name=${name}&value=${value}`
+		}
+		let url = `http://${this.config.host}/v1/${cmd}`
 
-	/**
-	 * Send a REST GET request to the switcher and handle errorcodes
-	 * @param  {} url
-	 */
-	sendGetRequest(url) {
-		this.debug('Requesting the following url:', url)
-		this.system.emit('rest_get', url, (err, result) => {
-			if (err !== null && this.session && this.currentStatus != 2) {
-				this.status(this.STATUS_ERROR, result.error.code)
-				this.log('error', 'Connection failed (' + result.error.code + ')')
-			} else if (result.response?.statusCode) {
-				if (result.response.statusCode == 200) {
-					this.status(this.STATUS_OK)
-					this.processData(result.data)
-				} else if (result.response.statusCode == 401) {
-					// mmm password?
-					this.status(this.STATUS_ERROR)
-					this.log('error', 'On the Tricaster under Administration Tools, turn off the LivePanel password')
-				} else {
-					this.status(this.STATUS_ERROR, 'Unexpected HTTP status code: ' + result.response.statusCode)
-					this.log('error', 'Unexpected HTTP status code: ' + result.response.statusCode)
+		if (custom) {
+			url = `http://${this.config.host}/v1/${custom}`
+		}
+
+		fetch(url)
+			.then((res) => {
+				if (res.status == 200) {
+					this.updateStatus('ok')
+				} else if (res.status == 401) {
+					this.updateStatus('bad_config', 'Authentication Error')
 				}
-			}
-		})
+			})
+			.catch((error) => {
+				let errorText = String(error)
+				if (errorText.match('ETIMEDOUT') || errorText.match('ENOTFOUND') || errorText.match('ECONNREFUSED')) {
+					this.updateStatus('connection_failure')
+				}
+				this.log('debug', errorText)
+			})
 	}
 
-	/**
-	 * Process incoming data from the rest connection
-	 * @param  {} data
-	 */
 	processData(data) {
-		if (data['tally'] !== undefined) {
-			// Set PGM and PVW variable/Feedback
-			this.tallyPVW = []
-			this.tallyPGM = []
-			if (this.inputs.length == 0) {
-				let variables = []
-				this.debug('Load initial Data')
-				data['tally']['column'].forEach((element) => {
-					//Prevent excess DDR/GFX A/B Inputs from being visible
-					if (!element['$']['name'].match(/[d,g][d,f][r,x][1-2](_)[a,b]/i)) {
-						this.inputs.push({
-							id: element['$']['index'],
-							label: element['$']['name'],
-							name: element['$']['name'],
-							long_name: element['$']['name'],
-							short_name: element['$']['name'],
-						})
-						variables.push({ name: `${element['$']['name']}`, label: element['$']['name'] })
-					}
-				})
-				this.set_variablesDefinition(variables)
-				this.init_feedbacks() // Same for feedback as it holds the inputs
-			}
-			data['tally']['column'].forEach((element) => {
-				element['$']['on_prev'] == 'true'
-					? (this.tallyPVW[element['$']['index']] = 'true')
-					: (this.tallyPVW[element['$']['index']] = 'false')
-				element['$']['on_pgm'] == 'true'
-					? (this.tallyPGM[element['$']['index']] = 'true')
-					: (this.tallyPGM[element['$']['index']] = 'false')
+		if (data.tally) {
+			data.tally.column.forEach((input) => {
+				let inputData = this.inputs.find((x) => x.id == input.index)
+				if (inputData) {
+					inputData.on_pgm = input.on_pgm
+					inputData.on_prev = input.on_prev
+				}
 			})
+			this.checkFeedbacks('tally_PGM', 'tally_PVW')
+		} else if (data.product_information) {
+			this.switcher.info = data.product_information
 
-			this.checkFeedbacks('tally_PGM') // Check directly, which source is active
-			this.checkFeedbacks('tally_PVW') // Check directly, which source is on preview
-		} else if (data['product_information'] !== undefined) {
-			this.log('info', `Connected to: ${data['product_information']['product_name']} at ${this.config.host}`)
-			this.switcher['product_name'] = data['product_information']['product_name']
-			this.switcher['product_version'] = data['product_information']['product_version']
+			this.log('info', `Connected to ${this.switcher.info.machine_name} at ${this.config.host}`)
 
-			this.setVariable('product_name', data['product_information']['product_name'])
-			this.setVariable('product_version', data['product_information']['product_version'])
-		} else if (data['switcher_update'] !== undefined) {
-			let pgmSource = data['switcher_update']['$']['main_source']
-			let pvwSource = data['switcher_update']['$']['preview_source']
+			this.setVariableValues({
+				product_name: this.switcher.info.product_name,
+				hostname: this.switcher.info.machine_name,
+				product_version: this.switcher.info.product_version,
+				session_name: this.switcher.info.session_name,
+			})
+		} else if (data.switcher_update) {
+			let pgmSource = data.switcher_update.main_source
+			let pvwSource = data.switcher_update.preview_source
 
-			pgmSource = this.inputs.find((el) => el.name == pgmSource.toLowerCase())
-			pvwSource = this.inputs.find((el) => el.name == pvwSource.toLowerCase())
+			pgmSource = this.inputs.find((x) => x.inputName == pgmSource.toLowerCase())
+			pvwSource = this.inputs.find((x) => x.inputName == pvwSource.toLowerCase())
 
-			this.setVariable(
-				'pgm_source',
-				pgmSource?.short_name ? pgmSource.short_name : data['switcher_update']['$']['main_source']
-			)
-			this.setVariable(
-				'pvw_source',
-				pvwSource?.short_name ? pvwSource.short_name : data['switcher_update']['$']['preview_source']
-			)
-		} else if (data['macros'] !== undefined) {
-			// Fetch all macros
-			data['macros']['systemfolder']['macro'].forEach((element) => {
+			this.setVariableValues({
+				pgm_source: pgmSource?.short_name ? pgmSource.short_name : data.switcher_update.main_source,
+				pvw_source: pvwSource?.short_name ? pvwSource.short_name : data.switcher_update.preview_source,
+			})
+		} else if (data.macros) {
+			data.macros.systemfolder.macro.forEach((macro) => {
 				this.system_macros.push({
-					id: element['$']['name'],
-					label: element['$']['name'],
+					id: macro.name,
+					label: macro.name,
 				})
 			})
-			this.custom_macros = []
 
-			let sessionMacros = data['macros']['sessionfolder']
+			let sessionMacros = data.macros.sessionfolder
 			if (sessionMacros.macro?.length > 1) {
 				sessionMacros.macro.forEach((macro) => {
 					this.custom_macros.push({
-						id: macro['$']['name'],
-						label: macro['$']['name'],
+						id: macro.name,
+						label: macro.name,
 					})
 				})
 			} else if (sessionMacros.macro) {
 				this.custom_macros.push({
-					id: sessionMacros.macro['$']['name'],
-					label: sessionMacros.macro['$']['name'],
+					id: macro.name,
+					label: macro.name,
 				})
 			}
 
-			data['macros']['folder']?.forEach((folder) => {
+			data.macros.folder?.forEach((folder) => {
 				if (folder.macro?.length > 1) {
 					folder.macro.forEach((macro) => {
 						this.custom_macros.push({
-							id: macro['$']['name'],
-							label: macro['$']['name'],
+							id: macro.name,
+							label: macro.name,
 						})
 					})
 				} else if (folder.macro) {
 					this.custom_macros.push({
-						id: folder.macro['$']['name'],
-						label: folder.macro['$']['name'],
+						id: folder.macro.name,
+						label: folder.macro.name,
 					})
 				}
 			})
-			this.actions() // Reset the actions, marco's could be updated
-		} else if (data['shortcut_states'] !== undefined) {
-			// Handled by TCP states
-		} else if (data['datalink_values'] !== undefined) {
-			// This is done by polling
-			let variables = []
-			let _datalink = []
-			data['datalink_values']['data'].forEach((element) => {
-				if (this.datalink[element.key] != element.value) this.setVariable(element.key, element.value)
-				_datalink[element.key] = element.value
-				variables.push({ name: element.key, label: element.key })
+			this.initActions()
+		} else if (data.shortcut_states) {
+			data.shortcut_states?.shortcut_state.forEach((state) => {
+				if (state.name.match(/_short_name/)) {
+					let input = this.inputs.find((x) => x.inputName == state.name.replace('_short_name', ''))
+					if (input) {
+						if (input.short_name !== state.value) {
+							input.short_name = state.value
+						}
+					}
+				} else if (state.name.match(/_long_name/)) {
+					let input = this.inputs.find((x) => x.inputName == state.name.replace('_long_name', ''))
+					if (input) {
+						if (input?.long_name !== state.value) {
+							input.label = state.value
+							input.long_name = state.value
+							this.initActions()
+							this.initPresets()
+						}
+					}
+				} else if (state.name == 'record_toggle') {
+					this.switcher.recording = state.value > 0 ? true : false
+					this.setVariableValues({ recording: this.switcher.recording ? 'Recording' : 'Stopped' })
+					this.checkFeedbacks('recording')
+				} else if (state.name == 'streaming_toggle') {
+					this.switcher.streaming = state.value == '1' ? true : false
+					this.setVariableValues({ streaming: this.switcher.streaming ? 'Streaming' : 'Stopped' })
+					this.checkFeedbacks('streaming')
+				} else if (
+					state.name.match(/ddr[0-9]_play/) ||
+					state.name.match(/gfx[0-9]_play/) ||
+					state.name.match(/stills_play/) ||
+					state.name.match(/titles_play/) ||
+					state.name.match(/sound_play/)
+				) {
+					this.shortcut_states[`${state.name}`] = state.value
+					this.checkFeedbacks('mediaPlaying')
+				}
 			})
+		} else if (data.datalink_values) {
+			if (this.datalink.length !== data.datalink_values.data.length) {
+				this.datalink = data.datalink_values.data
+				this.initVariables()
+			}
 
-			this.datalink = _datalink
-			this.set_variablesDefinition(variables)
+			let updatedVariables = {}
+			data.datalink_values.data.forEach((element) => {
+				let name = element.key.replace(/[\W]/gi, '')
+				updatedVariables[`${name}`] = element.value
+			})
+			this.setVariableValues(updatedVariables)
 		} else {
-			// this.debug('data from request',data);
 		}
-	}
-
-	/**
-	 * Set available feedback choices
-	 */
-	init_feedbacks() {
-		const feedbacks = initFeedbacks.bind(this)()
-		this.setFeedbackDefinitions(feedbacks)
-	}
-
-	/**
-	 * Execute feedback
-	 * @param  {} feedback
-	 * @param  {} bank
-	 */
-	feedback(feedback, bank) {
-		return executeFeedback.bind(this)(feedback, bank)
-	}
-
-	/**
-	 * Process all executed actions (by user)
-	 * @param  {} action
-	 */
-	action(action) {
-		let id = action.action
-		let opt = action.options
-		let cmd = ''
-
-		switch (id) {
-			case 'take':
-				cmd = `<shortcuts><shortcut name="${opt.v}_take" /></shortcuts>`
-				break
-			case 'auto':
-				cmd = `<shortcuts><shortcut name="${opt.v}_auto" /></shortcuts>`
-				break
-			case 'auto_dsk':
-				cmd = `<shortcuts><shortcut name="main_${opt.dsk}_auto" /></shortcuts>`
-				break
-			case 'streaming':
-				cmd = `<shortcuts><shortcut name="streaming_toggle" value="${parseInt(opt.force)}" /></shortcuts>`
-				this.switcher['streaming'] = opt.force == '1' ? true : false
-				this.setVariable('streaming', opt.force == '1' ? true : false)
-				this.debug(cmd)
-				break
-			case 'source_pgm':
-				cmd = `<shortcuts><shortcut name="main_a_row" value="${opt.source}" /></shortcuts>`
-				this.tallyPGM = opt.source // Do we wait for feedback or set it directly?
-				break
-			case 'source_pvw':
-				cmd = `<shortcuts><shortcut name="main_b_row" value="${opt.source}" /></shortcuts>`
-				this.tallyPVW = opt.source // Do we wait for feedback or set it directly?
-				break
-			case 'source_to_v':
-				cmd = `<shortcuts><shortcut name="${opt.destination}" value="${opt.source}" /></shortcuts>`
-				break
-			case 'source_to_dsk':
-				cmd = `<shortcuts><shortcut name="${opt.dskDestinations}_select" value="${opt.source}" /></shortcuts>`
-				break
-			case 'media_target':
-				cmd = `<shortcuts><shortcut name="${opt.target}" /></shortcuts>`
-				break
-			case 'autoplay_mode_toggle':
-				cmd = `<shortcuts><shortcut name="${opt.target}_autoplay_mode_toggle" value="${opt.toggle}" /></shortcuts>`
-				break
-			case 'record_start':
-				cmd = `<shortcuts><shortcut name="record_start" /></shortcuts>`
-				break
-			case 'record_stop':
-				cmd = `<shortcuts><shortcut name="record_stop" /></shortcuts>`
-				break
-			case 'tbar':
-				cmd = `<shortcuts><shortcut name="main_value" /></shortcuts>`
-				break
-			case 'datalink':
-				cmd = `<shortcuts><shortcut name="set_datalink"><entry key="datalink_key" value="${opt.datalink_key}" /><entry key="datalink_value" value="${opt.datalink_value}"/></shortcut></shortcuts>`
-				break
-			case 'audio_volume':
-				cmd = `<shortcuts><shortcut name="${opt.source}_volume" value="${opt.volume}" /></shortcuts>`
-				break
-			case 'audio_mute':
-				cmd = `<shortcuts><shortcut name="${opt.source}_mute" value="${opt.mute}" /></shortcuts>`
-				break
-			case 'load_save_v':
-				cmd = `<shortcuts><shortcut name="${opt.v}${opt.loadSave}" value="${opt.preset}" /></shortcuts>`
-				break
-			case 'transition_speed_number':
-				cmd = `<shortcuts><shortcut name="main_background_speed" value="${opt.speed}" /></shortcuts>`
-				break
-			case 'transition_speed':
-				cmd = `<shortcuts><shortcut name="${opt.speed}" /></shortcuts>`
-				break
-			case 'transition_index':
-				cmd = `<shortcuts><shortcut name="main_background_select_index" value="${opt.type}" /></shortcuts>`
-				break
-			case 'previz_dsk_auto':
-				cmd = `<shortcuts><shortcut name="previz_${opt.dsk}_auto" /></shortcuts>`
-				break
-			case 'custom':
-				cmd = opt.custom
-				break
-			case 'trigger':
-				cmd = `<shortcuts><shortcut name="play_macro_byname" value="${opt.macro}"/></shortcuts>`
-				break
-		}
-
-		if (cmd !== '') {
-			// send the xml to TCP socket
-			this.socket.send(cmd + '\n')
-			// this.debug(cmd)
-		} else {
-			// mmm do matching action found?
-		}
-		this.checkFeedbacks('tally_PGM')
-		this.checkFeedbacks('tally_PVW')
-		this.checkFeedbacks('tally_streaming')
 	}
 }
 
-exports = module.exports = instance
+runEntrypoint(TricasterInstance, upgradeScripts)

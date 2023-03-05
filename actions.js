@@ -1,9 +1,7 @@
-module.exports = {
-	getActions() {
-		var actions = {}
-
-		actions['take'] = {
-			label: 'Take',
+export function getActions() {
+	return {
+		take: {
+			name: 'Take',
 			options: [
 				{
 					label: 'M/E',
@@ -13,9 +11,12 @@ module.exports = {
 					default: 'main',
 				},
 			],
-		}
-		actions['auto'] = {
-			label: 'Auto transition',
+			callback: (action) => {
+				this.sendCommand(`${action.options.v}_take`)
+			},
+		},
+		auto: {
+			name: 'Auto transition',
 			options: [
 				{
 					label: 'M/E',
@@ -25,9 +26,12 @@ module.exports = {
 					default: 'main',
 				},
 			],
-		}
-		actions['auto_dsk'] = {
-			label: 'Auto transition DSK',
+			callback: (action) => {
+				this.sendCommand(`${action.options.v}_auto`)
+			},
+		},
+		auto_dsk: {
+			name: 'Auto transition DSK',
 			options: [
 				{
 					label: 'Choose dsk',
@@ -42,26 +46,58 @@ module.exports = {
 					default: 'dsk1',
 				},
 			],
-		}
-		actions['record_start'] = { label: 'Record Start' }
-		actions['record_stop'] = { label: 'Record Stop' }
-		actions['streaming'] = {
-			label: 'Streaming',
+			callback: (action) => {
+				this.sendCommand(`main_${action.options.dsk}_auto`)
+			},
+		},
+		record: {
+			name: 'Record actions',
 			options: [
 				{
-					label: 'on/off',
-					id: 'force',
+					label: 'Action',
+					id: 'record',
 					type: 'dropdown',
 					choices: [
-						{ id: 1, label: 'on' },
-						{ id: 0, label: 'off' },
+						{ id: 'toggle', label: 'Toggle Record' },
+						{ id: 1, label: 'Start Record' },
+						{ id: 0, label: 'Stop Record' },
 					],
-					default: 1,
+					default: 'toggle',
 				},
 			],
-		}
-		actions['trigger'] = {
-			label: 'Trigger Custom Macro',
+			callback: (action) => {
+				if (action.options.record === 'toggle') {
+					this.sendCommand(`record_toggle`)
+				} else {
+					this.sendCommand(`record_toggle`, `${action.options.record}`)
+				}
+			},
+		},
+		stream: {
+			name: 'Stream actions',
+			options: [
+				{
+					label: 'Action',
+					id: 'stream',
+					type: 'dropdown',
+					choices: [
+						{ id: 'toggle', label: 'Toggle Stream' },
+						{ id: 1, label: 'Start Stream' },
+						{ id: 0, label: 'Stop Stream' },
+					],
+					default: 'toggle',
+				},
+			],
+			callback: (action) => {
+				if (action.options.stream === 'toggle') {
+					this.sendCommand(`streaming_toggle`)
+				} else {
+					this.sendCommand(`streaming_toggle`, `${action.options.stream}`)
+				}
+			},
+		},
+		customMacro: {
+			name: 'Run custom macro',
 			options: [
 				{
 					label: 'Macro Name',
@@ -71,21 +107,27 @@ module.exports = {
 					default: this.custom_macros[0] ? this.custom_macros[0].id : '',
 				},
 			],
-		}
-		actions['macros'] = {
-			label: 'Run system macro',
+			callback: (action) => {
+				this.sendCommand(`play_macro_byname`, `${action.options.macro}`)
+			},
+		},
+		systemMacro: {
+			name: 'Run system macro',
 			options: [
 				{
-					label: 'Select macro',
+					label: 'Macro Name',
 					type: 'dropdown',
 					id: 'macro',
 					choices: this.system_macros,
 					default: 'Stream: Start',
 				},
 			],
-		}
-		actions['source_pvw'] = {
-			label: 'Set source to preview',
+			callback: (action) => {
+				this.sendCommand(`play_macro_byname`, `${action.options.macro}`)
+			},
+		},
+		source_pvw: {
+			name: 'Set source to preview',
 			options: [
 				{
 					label: 'Sources',
@@ -95,21 +137,27 @@ module.exports = {
 					default: 0,
 				},
 			],
-		}
-		actions['source_pgm'] = {
-			label: 'Set source to program',
+			callback: (action) => {
+				this.sendCommand(`main_b_row`, `${action.options.source}`)
+			},
+		},
+		source_pgm: {
+			name: 'Set source to program',
 			options: [
 				{
-					label: 'Sources',
+					label: 'Source',
 					type: 'dropdown',
 					id: 'source',
 					choices: this.inputs,
-					default: 0,
+					default: '0',
 				},
 			],
-		}
-		actions['source_to_v'] = {
-			label: 'Set source to M/E',
+			callback: (action) => {
+				this.sendCommand(`main_a_row`, `${action.options.source}`)
+			},
+		},
+		source_to_v: {
+			name: 'Set source to M/E',
 			options: [
 				{
 					label: 'Destination',
@@ -119,16 +167,19 @@ module.exports = {
 					default: 'v1_a_row',
 				},
 				{
-					label: 'Sources',
+					label: 'Source',
 					type: 'dropdown',
 					id: 'source',
 					choices: this.inputs,
 					default: 0,
 				},
 			],
-		}
-		actions['source_to_dsk'] = {
-			label: 'Set source to DSK',
+			callback: (action) => {
+				this.sendCommand(`${action.options.destination}`, `${action.options.source}`)
+			},
+		},
+		source_to_dsk: {
+			name: 'Set source to DSK',
 			options: [
 				{
 					label: 'Destination',
@@ -145,9 +196,12 @@ module.exports = {
 					default: 0,
 				},
 			],
-		}
-		actions['media_target'] = {
-			label: 'Media options',
+			callback: (action) => {
+				this.sendCommand(`${action.options.dskDestinations}`, `${action.options.source}`)
+			},
+		},
+		media_target: {
+			name: 'Media actions',
 			options: [
 				{
 					label: 'Target',
@@ -157,9 +211,12 @@ module.exports = {
 					default: 'ddr1_play',
 				},
 			],
-		}
-		actions['autoplay_mode_toggle'] = {
-			label: 'Autoplay mode',
+			callback: (action) => {
+				this.sendCommand(`${action.options.target}`)
+			},
+		},
+		autoplay_mode_toggle: {
+			name: 'Autoplay mode',
 			options: [
 				{
 					label: 'Target',
@@ -184,9 +241,12 @@ module.exports = {
 					default: 'true',
 				},
 			],
-		}
-		actions['datalink'] = {
-			label: 'Set DataLink key value',
+			callback: (action) => {
+				this.sendCommand(`${action.options.target}_autoplay_mode_toggle`, `${action.options.toggle}`)
+			},
+		},
+		datalink: {
+			name: 'Set DataLink value',
 			options: [
 				{
 					label: 'DataLink Key',
@@ -201,9 +261,13 @@ module.exports = {
 					width: 6,
 				},
 			],
-		}
-		actions['audio_volume'] = {
-			label: 'Set volume',
+			callback: (action) => {
+				cmd = `datalink?key=${action.options.datalink_key}&value=${action.options.datalink_value}`
+				this.sendCommand(null, null, cmd)
+			},
+		},
+		audio_volume: {
+			name: 'Set volume',
 			options: [
 				{
 					label: 'Choice',
@@ -228,9 +292,12 @@ module.exports = {
 					max: 0,
 				},
 			],
-		}
-		actions['audio_mute'] = {
-			label: 'Mute audio',
+			callback: (action) => {
+				this.sendCommand(`${action.options.source}_volume`, `${action.options.volume}`)
+			},
+		},
+		audio_mute: {
+			name: 'Mute audio',
 			options: [
 				{
 					label: 'Choice',
@@ -257,12 +324,15 @@ module.exports = {
 					default: 'true',
 				},
 			],
-		}
-		actions['load_save_v'] = {
-			label: 'Load/Save Preset V',
+			callback: (action) => {
+				this.sendCommand(`${action.options.source}_mute`, `${action.options.mute}`)
+			},
+		},
+		load_save_v: {
+			name: 'Load/Save M/E Preset',
 			options: [
 				{
-					label: 'Select V',
+					label: 'M/E',
 					type: 'dropdown',
 					id: 'v',
 					choices: this.meList,
@@ -279,7 +349,7 @@ module.exports = {
 					default: '_load_from_emem',
 				},
 				{
-					label: 'Preset number',
+					label: 'Preset Number',
 					type: 'number',
 					id: 'preset',
 					min: 0,
@@ -287,12 +357,15 @@ module.exports = {
 					default: 0,
 				},
 			],
-		}
-		actions['transition_speed_number'] = {
-			label: 'Transition Speed (number 1-10)',
+			callback: (action) => {
+				this.sendCommand(`${action.options.v}${action.options.loadSave}`, `${action.options.preset}`)
+			},
+		},
+		transition_speed_number: {
+			name: 'Transition Speed',
 			options: [
 				{
-					label: 'Speed',
+					label: 'Speed (1-10)',
 					type: 'number',
 					id: 'speed',
 					min: 0,
@@ -300,9 +373,12 @@ module.exports = {
 					default: 1,
 				},
 			],
-		}
-		actions['transition_speed'] = {
-			label: 'Transition Speed',
+			callback: (action) => {
+				this.sendCommand(`main_background_speed`, `${action.options.speed}`)
+			},
+		},
+		transition_speed: {
+			name: 'Transition Speed',
 			options: [
 				{
 					label: 'Speed',
@@ -316,34 +392,30 @@ module.exports = {
 					default: 'main_background_medium',
 				},
 			],
-		}
-		actions['transition_index'] = {
-			label: 'Transition Type',
+			callback: (action) => {
+				this.sendCommand(action.options.speed)
+			},
+		},
+		transition_index: {
+			name: 'Transition Type',
 			options: [
 				{
 					label: 'Type',
 					type: 'dropdown',
 					id: 'type',
-					choices: [
-						{ id: '-1', label: '-1' },
-						{ id: '0', label: '0' },
-						{ id: '1', label: '1' },
-						{ id: '2', label: '2' },
-						{ id: '3', label: '3' },
-						{ id: '4', label: '4' },
-						{ id: '5', label: '5' },
-						{ id: '6', label: '6' },
-						{ id: '7', label: '7' },
-					],
+					choices: this.transitions,
 					default: '1',
 				},
 			],
-		}
-		actions['previz_dsk_auto'] = {
-			label: 'Previz DSK Auto transition',
+			callback: (action) => {
+				this.sendCommand(`main_background_select_index`, `${action.options.type}`)
+			},
+		},
+		previz_dsk_auto: {
+			name: 'Previz DSK Auto transition',
 			options: [
 				{
-					label: 'Choose dsk',
+					label: 'DSK',
 					type: 'dropdown',
 					choices: [
 						{ id: 'dsk1', label: 'DSK 1' },
@@ -355,18 +427,23 @@ module.exports = {
 					default: 'dsk1',
 				},
 			],
-		}
-		actions['custom'] = {
-			label: 'Custom shortcut',
+			callback: (action) => {
+				this.sendCommand(`previz_${action.options.dsk}_auto`)
+			},
+		},
+		custom: {
+			name: 'Custom shortcut',
 			options: [
 				{
 					label: 'Command',
 					type: 'textinput',
 					id: 'custom',
-					default: '<shortcuts><shortcut name="main_background_take" /></shortcuts>',
+					default: 'shortcut?name=main_background_take',
 				},
 			],
-		}
-		return actions
-	},
+			callback: (action) => {
+				this.sendCommand(null, null, action.options.custom)
+			},
+		},
+	}
 }
