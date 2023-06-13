@@ -262,7 +262,7 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				cmd = `datalink?key=${action.options.datalink_key}&value=${action.options.datalink_value}`
+				let cmd = `datalink?key=${action.options.datalink_key}&value=${action.options.datalink_value}`
 				this.sendCommand(null, null, cmd)
 			},
 		},
