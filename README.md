@@ -4,6 +4,11 @@ See [HELP.md](./companion/HELP.md) & LICENSE
 
 ## Changelog
 
+### v2.0.1
+
+- Fix
+  - Set DataLink value action would not update values
+
 ### v2.0.0
 
 - Major
