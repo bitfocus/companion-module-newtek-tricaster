@@ -503,6 +503,7 @@ class TricasterInstance extends InstanceBase {
 				pvw_source: pvwSource?.short_name ? pvwSource.short_name : data.switcher_update.preview_source,
 			})
 		} else if (data.macros) {
+			this.custom_macros = []
 			data.macros.systemfolder.macro.forEach((macro) => {
 				this.system_macros.push({
 					id: macro.name,
@@ -519,13 +520,30 @@ class TricasterInstance extends InstanceBase {
 					})
 				})
 			} else if (sessionMacros.macro) {
+				let macro = sessionMacros.macro
 				this.custom_macros.push({
 					id: macro.name,
 					label: macro.name,
 				})
 			}
-
-			data.macros.folder?.forEach((folder) => {
+			if (data.macros.folder?.length > 1) {
+				data.macros.folder?.forEach((folder) => {
+					if (folder.macro?.length > 1) {
+						folder.macro.forEach((macro) => {
+							this.custom_macros.push({
+								id: macro.name,
+								label: macro.name,
+							})
+						})
+					} else if (folder.macro) {
+						this.custom_macros.push({
+							id: folder.macro.name,
+							label: folder.macro.name,
+						})
+					}
+				})
+			} else if (data.macros.folder) {
+				let folder = data.macros.folder
 				if (folder.macro?.length > 1) {
 					folder.macro.forEach((macro) => {
 						this.custom_macros.push({
@@ -539,7 +557,7 @@ class TricasterInstance extends InstanceBase {
 						label: folder.macro.name,
 					})
 				}
-			})
+			}
 			this.initActions()
 		} else if (data.shortcut_states) {
 			data.shortcut_states?.shortcut_state.forEach((state) => {
