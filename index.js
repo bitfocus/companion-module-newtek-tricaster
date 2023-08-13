@@ -94,8 +94,9 @@ class TricasterInstance extends InstanceBase {
 
 	async initConnection() {
 		let version = await this.awaitRequest('version')
+		let shortcuts = await this.awaitRequest('dictionary?key=shortcut_states') //This allows older firmware that don't support the version call to still connect
 
-		if (version?.product_information) {
+		if (version?.product_information || shortcuts) {
 			this.updateStatus('ok')
 			this.initStates()
 			this.initWebsocket()
