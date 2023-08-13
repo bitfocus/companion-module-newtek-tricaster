@@ -4,6 +4,12 @@ See [HELP.md](./companion/HELP.md) & LICENSE
 
 ## Changelog
 
+### v2.0.2
+
+- Fix
+  - Some custom macros would not be displayed in the dropdown list
+  - Tricasters with older firmware would not connect
+
 ### v2.0.1
 
 - Fix
