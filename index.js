@@ -217,6 +217,9 @@ class TricasterInstance extends InstanceBase {
 		let tallyData = await this.awaitRequest('dictionary?key=tally')
 		let states = await this.awaitRequest('dictionary?key=shortcut_states')
 		let transitions = await this.awaitRequest('dictionary?key=switcher_ui_effects')
+
+		let inputVars = {}
+
 		if (tallyData && states) {
 			tallyData.tally.column.forEach((input) => {
 				//Create Inputs
@@ -243,6 +246,7 @@ class TricasterInstance extends InstanceBase {
 							on_pgm: input.on_pgm,
 							on_prev: input.on_prev,
 						})
+						inputVars[`${input.name}`] = longName
 					}
 				}
 				//Create M/Es
@@ -354,6 +358,9 @@ class TricasterInstance extends InstanceBase {
 		this.initActions()
 		this.initFeedbacks()
 		this.initPresets()
+		this.initVariables()
+
+		this.setVariableValues(inputVars)
 		this.checkFeedbacks('tally_PGM', 'tally_PVW')
 	}
 
