@@ -4,6 +4,11 @@ See [HELP.md](./companion/HELP.md) & LICENSE
 
 ## Changelog
 
+### v2.0.3
+
+- Fix
+  - Reintroduce input label variables
+
 ### v2.0.2
 
 - Fix
