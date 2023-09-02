@@ -41,5 +41,15 @@ export function getVariables() {
 		})
 	}
 
+	if (this.inputs) {
+		let allInputs = {}
+		this.inputs.forEach((input) => {
+			let name = input.inputName
+			let longName = input.long_name
+			variables.push({ variableId: name, name: `${name} Label` })
+			allInputs[`${name}`] = longName
+		})
+	}
+
 	return variables
 }
