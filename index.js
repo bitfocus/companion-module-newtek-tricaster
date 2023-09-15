@@ -343,7 +343,7 @@ class TricasterInstance extends InstanceBase {
 					let int = 0
 					for (let x in switcher.effect_bin) {
 						let transition = switcher.effect_bin[x]
-						let name = transition?.effect.match(/[^\\]+\.trans$/i)
+						let name = transition?.effect?.match(/[^\\]+\.trans$/i)
 						if (name) {
 							name = name[0].replace('.trans', '')
 							this.transitions.push({ id: ++int, label: name })

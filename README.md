@@ -4,6 +4,11 @@ See [HELP.md](./companion/HELP.md) & LICENSE
 
 ## Changelog
 
+### v2.0.4
+
+- Fix
+  - Crash after updating to latest Tricaster firmware, due to change in transition XML data
+
 ### v2.0.3
 
 - Fix
