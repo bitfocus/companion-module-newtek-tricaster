@@ -7,14 +7,15 @@
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
-"@companion-module/base@~1.4.3":
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-1.4.3.tgz#0e83955c8fc41e8f525f29ddf7a32cb70dbc2ec5"
-  integrity sha512-bIcJ75idsdILW5/sd1HoX0HkIRcwMyMZ2nccj/I2xJMDnn93Rz54aQ9zn3ZePvqP+H1N/x45VWC1IHMVzReT7Q==
+"@companion-module/base@~1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-1.6.0.tgz#1caa1b310855a757a0a55eb4b1f1b301f37615e3"
+  integrity sha512-KnsgHtgmB36t2wlBSYyRgw4eSrm6rJXoBWClBURfssk9OgochaJtWwPLuA/SgjLAxPOnTTNt4PvHgzcVv6MjYg==
   dependencies:
     "@sentry/node" "^7.63.0"
     "@sentry/tracing" "^7.63.0"
     ajv "^8.12.0"
+    colord "^2.9.3"
     ejson "^2.2.3"
     eventemitter3 "^4.0.7"
     mimic-fn "^3.0.0"
@@ -23,10 +24,10 @@
     p-timeout "^4.1.0"
     tslib "^2.6.1"
 
-"@companion-module/tools@^1.4.1":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@companion-module/tools/-/tools-1.4.1.tgz#ba7ef9dec6992d66972748e04db79a9e2454027f"
-  integrity sha512-hZrv24x0dofxNG+XeIlJpXmq7mH26LXMomWIBJ2W/7Oqs+jTMnULg4LhW1DzPxhfbEVBJQLtJ1v8nD37zk9HgQ==
+"@companion-module/tools@^1.4.2":
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/@companion-module/tools/-/tools-1.4.2.tgz#9c2ff326f81dc2bc6ff175ce596242c308df26ab"
+  integrity sha512-orYowae8KRLdtezezxgwxQTmSbBFAU3ngy3sOyNC9DTy7O70nP/tKvMQJJXy+h3VgYzStTGf7Cx+SOGGoB7uOA==
   dependencies:
     "@typescript-eslint/eslint-plugin" "^5.59.9"
     "@typescript-eslint/parser" "^5.59.9"
@@ -706,6 +707,11 @@ color-name@~1.1.4:
   resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.4.tgz#c2a09a87acbde69543de6f63fa3995c826c536a2"
   integrity sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==
 
+colord@^2.9.3:
+  version "2.9.3"
+  resolved "https://registry.yarnpkg.com/colord/-/colord-2.9.3.tgz#4f8ce919de456f1d5c1c368c307fe20f3e59fb43"
+  integrity sha512-jeC1axXpnb0/2nn/Y1LPuLdgXBLH7aDcHu4KEKfqw3CUhX7ZpfBSlPKyqXE6btIgEzfWtrX3/tyBCaCvXvMkOw==
+
 colorette@^2.0.14:
   version "2.0.19"
   resolved "https://registry.yarnpkg.com/colorette/-/colorette-2.0.19.tgz#cdf044f47ad41a0f4b56b3a0d5b4e6e1a2d5a798"
@@ -1015,10 +1021,10 @@ fast-levenshtein@^2.0.6:
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==
 
-fast-xml-parser@^4.2.7:
-  version "4.2.7"
-  resolved "https://registry.yarnpkg.com/fast-xml-parser/-/fast-xml-parser-4.2.7.tgz#871f2ca299dc4334b29f8da3658c164e68395167"
-  integrity sha512-J8r6BriSLO1uj2miOk1NW0YVm8AGOOu3Si2HQp/cSmo6EA4m3fcwu2WKjJ4RK9wMLBtg69y1kS8baDiQBR41Ig==
+fast-xml-parser@^4.3.2:
+  version "4.3.2"
+  resolved "https://registry.yarnpkg.com/fast-xml-parser/-/fast-xml-parser-4.3.2.tgz#761e641260706d6e13251c4ef8e3f5694d4b0d79"
+  integrity sha512-rmrXUXwbJedoXkStenj1kkljNF7ugn5ZjR9FJcwmCfcCbtOMDghPajbc+Tck6vE6F5XsDmx+Pr2le9fw8+pXBg==
   dependencies:
     strnum "^1.0.5"
 
@@ -2189,10 +2195,10 @@ wrappy@1:
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
   integrity sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==
 
-ws@^8.14.1:
-  version "8.14.1"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.14.1.tgz#4b9586b4f70f9e6534c7bb1d3dc0baa8b8cf01e0"
-  integrity sha512-4OOseMUq8AzRBI/7SLMUwO+FEDnguetSk7KMb1sHwvF2w2Wv5Hoj0nlifx8vtGsftE/jWHojPy8sMMzYLJ2G/A==
+ws@^8.16.0:
+  version "8.16.0"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-8.16.0.tgz#d1cd774f36fbc07165066a60e40323eab6446fd4"
+  integrity sha512-HS0c//TP7Ina87TfiPUz1rQzMhHrl/SG2guqRcTOIUYD2q8uhUdNHZYJUaQ8aTGPzCh+c6oawMKW35nFl1dxyQ==
 
 yallist@^4.0.0:
   version "4.0.0"
