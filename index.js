@@ -208,7 +208,7 @@ class TricasterInstance extends InstanceBase {
 		for (let dsk = 1; dsk < 5; dsk++) {
 			this.dskDestinations.push({
 				id: `main_dsk${dsk}`,
-				label: `main dsk ${dsk}`,
+				label: `MAIN DSK ${dsk}`,
 			})
 		}
 	}
@@ -603,6 +603,12 @@ class TricasterInstance extends InstanceBase {
 				) {
 					this.shortcut_states[`${state.name}`] = state.value
 					this.checkFeedbacks('mediaPlaying')
+				} else if (state.name.match(/dsk[0-4]_value/)) {
+					this.shortcut_states[`${state.name}`] = state.value == '1' ? true : false
+					this.checkFeedbacks('dskOnAir')
+				} else if (state.name.match(/v[0-4]_delegate/) || state.name.match(/main_delegate/)) {
+					let selected = state.value.split('|')
+					this.shortcut_states[`${state.name}`] = selected
 				}
 			})
 		} else if (data.datalink_values) {
@@ -620,6 +626,8 @@ class TricasterInstance extends InstanceBase {
 		} else {
 		}
 	}
+
+	checkDelegateStatus(current, v, item) {}
 }
 
 runEntrypoint(TricasterInstance, upgradeScripts)
