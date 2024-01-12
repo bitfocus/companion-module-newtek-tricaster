@@ -1,6 +1,6 @@
 {
 	"name": "newtek-tricaster",
-	"version": "2.0.5",
+	"version": "2.1.0",
 	"main": "index.js",
 	"scripts": {
 		"format": "prettier -w ."
@@ -8,8 +8,8 @@
 	"type": "module",
 	"license": "MIT",
 	"dependencies": {
-		"@companion-module/base": "~1.6.0",
-		"fast-xml-parser": "^4.3.2",
+		"@companion-module/base": "~1.7.0",
+		"fast-xml-parser": "^4.3.3",
 		"node-fetch": "^3.3.2",
 		"ws": "^8.16.0"
 	},

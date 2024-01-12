@@ -4,6 +4,14 @@ See [HELP.md](./companion/HELP.md) & LICENSE
 
 ## Changelog
 
+### v2.1.0
+
+- New
+  - Set DSK On Air action
+  - Set Mix Output action
+  - Set Transition Selection action
+  - DSK On-Air feedback
+
 ### v2.0.5
 
 - Minor

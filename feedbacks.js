@@ -97,5 +97,24 @@ export function getFeedbacks() {
 		},
 	}
 
+	feedbacks.dskOnAir = {
+		type: 'boolean',
+		name: 'Change style when DSK is on air',
+		description: 'When DSK is on air, button style will change',
+		defaultStyle: { bgcolor: ColorGreen },
+		options: [
+			{
+				type: 'dropdown',
+				label: 'DSK',
+				id: 'target',
+				choices: this.dskDestinations,
+				default: 'main_dsk1',
+			},
+		],
+		callback: (feedback) => {
+			return this.shortcut_states[`${feedback.options.target}_value`]
+		},
+	}
+
 	return feedbacks
 }
