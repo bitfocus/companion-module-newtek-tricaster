@@ -6,6 +6,19 @@ export function getActions() {
 		{ id: 'toggle', label: 'Toggle' },
 	]
 
+	let mixOutputOptions = [
+		...this.meList,
+		{ id: `program_clean`, label: 'Program Clean' },
+		{ id: `Preview`, label: 'Preview' },
+		{ id: `Black`, label: 'Black' },
+		...this.mediaSourceNames,
+	]
+	this.inputs.forEach((input) => {
+		if (input.ndiInput) {
+			mixOutputOptions.push({ id: `INPUT${Number(input.id) + 1}`, label: input.label })
+		}
+	})
+
 	return {
 		take: {
 			name: 'Take',
@@ -527,6 +540,57 @@ export function getActions() {
 				})
 				let newDelegate = updated.join('|')
 				this.sendCommand(`${action.options.v}_delegate`, newDelegate)
+			},
+		},
+		setDskOnAir: {
+			name: 'Set DSK On Air',
+			options: [
+				{
+					label: 'DSK',
+					type: 'dropdown',
+					id: 'dsk',
+					choices: this.dskDestinations,
+					default: 'v1_dsk1',
+				},
+				{
+					label: 'On Air',
+					type: 'checkbox',
+					id: 'status',
+					default: true,
+				},
+			],
+			callback: (action) => {
+				this.sendCommand(`${action.options.dsk}_value`, action.options.status === true ? '1' : '0')
+			},
+		},
+		setMixOutput: {
+			name: 'Set Mix Output',
+			options: [
+				{
+					label: 'Mix',
+					type: 'number',
+					id: 'mix',
+					default: 1,
+					min: 1,
+					max: 8,
+				},
+				{
+					label: 'Source',
+					type: 'dropdown',
+					id: 'source',
+					choices: mixOutputOptions,
+					default: 'main',
+				},
+			],
+			callback: (action) => {
+				console.log(action.options.source)
+				let source = action.options.source
+				if (source === 'main') {
+					source = 'Program'
+				}
+
+				console.log(action.options.source)
+				this.sendCommand(`mix${action.options.mix}_output_source`, source)
 			},
 		},
 	}

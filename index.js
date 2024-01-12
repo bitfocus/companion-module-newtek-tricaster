@@ -245,6 +245,7 @@ class TricasterInstance extends InstanceBase {
 							short_name: shortName,
 							on_pgm: input.on_pgm,
 							on_prev: input.on_prev,
+							ndiInput: input.ndi_id ? true : false,
 						})
 						inputVars[`${input.name}`] = longName
 					}
