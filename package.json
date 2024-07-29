@@ -9,7 +9,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"@companion-module/base": "~1.7.0",
-		"fast-xml-parser": "^4.3.3",
+		"fast-xml-parser": "^4.4.1",
 		"node-fetch": "^3.3.2",
 		"ws": "^8.17.1"
 	},
