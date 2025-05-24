@@ -105,3 +105,4 @@ dist
 
 /pkg
 /pkg.tgz
+/.yarn
