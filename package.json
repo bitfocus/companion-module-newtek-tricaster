@@ -1,24 +1,33 @@
 {
 	"name": "newtek-tricaster",
-	"version": "2.1.1",
+	"version": "2.2.0",
 	"main": "index.js",
 	"scripts": {
-		"format": "prettier -w ."
+		"format": "prettier -w .",
+		"package": "companion-module-build",
+		"lint:raw": "eslint",
+		"lint": "yarn lint:raw ."
 	},
 	"type": "module",
 	"license": "MIT",
 	"dependencies": {
-		"@companion-module/base": "~1.10.0",
-		"fast-xml-parser": "^4.4.1",
+		"@companion-module/base": "~1.12.0",
+		"fast-xml-parser": "^4.5.3",
 		"node-fetch": "^3.3.2",
-		"ws": "^8.18.0"
+		"ws": "^8.18.2"
 	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/bitfocus/companion-module-newtek-tricaster.git"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^1.4.2"
+		"@companion-module/tools": "^2.3.0",
+		"eslint": "^9.27.0",
+		"prettier": "^3.5.3"
 	},
-	"prettier": "@companion-module/tools/.prettierrc.json"
+	"engines": {
+		"node": "^22.12"
+	},
+	"prettier": "@companion-module/tools/.prettierrc.json",
+	"packageManager": "yarn@4.9.1"
 }

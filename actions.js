@@ -272,17 +272,21 @@ export function getActions() {
 					label: 'DataLink Key',
 					type: 'textinput',
 					id: 'datalink_key',
+					useVariables: true,
 					width: 6,
 				},
 				{
 					label: 'DataLink Value',
 					type: 'textinput',
 					id: 'datalink_value',
+					useVariables: true,
 					width: 6,
 				},
 			],
-			callback: (action) => {
-				let cmd = `datalink?key=${action.options.datalink_key}&value=${action.options.datalink_value}`
+			callback: async (action, context) => {
+				const key = await context.parseVariablesInString(action.options.datalink_key)
+				const value = await context.parseVariablesInString(action.options.datalink_value)
+				const cmd = `datalink?key=${key}&value=${value}`
 				this.sendCommand(null, null, cmd)
 			},
 		},
@@ -459,10 +463,12 @@ export function getActions() {
 					type: 'textinput',
 					id: 'custom',
 					default: 'shortcut?name=main_background_take',
+					useVariables: true,
 				},
 			],
-			callback: (action) => {
-				this.sendCommand(null, null, action.options.custom)
+			callback: async (action, context) => {
+				const command = await context.parseVariablesInString(action.options.custom)
+				this.sendCommand(null, null, command)
 			},
 		},
 		keyDelegate: {
@@ -583,13 +589,11 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				console.log(action.options.source)
 				let source = action.options.source
 				if (source === 'main') {
 					source = 'Program'
 				}
 
-				console.log(action.options.source)
 				this.sendCommand(`mix${action.options.mix}_output_source`, source)
 			},
 		},

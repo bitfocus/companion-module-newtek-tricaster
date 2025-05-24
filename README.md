@@ -4,6 +4,17 @@ See [HELP.md](./companion/HELP.md) & LICENSE
 
 ## Changelog
 
+### v2.2.0
+
+- New
+  - Ability to use variables in Set Datalink Value action
+  - Ability to use variables in Custom Command action
+
+### v2.1.1
+
+- Fix
+  - Update module dependencies with security patches
+
 ### v2.1.0
 
 - New
@@ -14,7 +25,7 @@ See [HELP.md](./companion/HELP.md) & LICENSE
 
 ### v2.0.5
 
-- Minor
+- Fix
   - Update dependencies to latest versions
 
 ### v2.0.4
