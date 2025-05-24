@@ -287,7 +287,6 @@ export function getActions() {
 				const key = await context.parseVariablesInString(action.options.datalink_key)
 				const value = await context.parseVariablesInString(action.options.datalink_value)
 				const cmd = `datalink?key=${key}&value=${value}`
-				console.log(`Sending DataLink command: ${cmd}`)
 				this.sendCommand(null, null, cmd)
 			},
 		},
@@ -590,13 +589,11 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
-				console.log(action.options.source)
 				let source = action.options.source
 				if (source === 'main') {
 					source = 'Program'
 				}
 
-				console.log(action.options.source)
 				this.sendCommand(`mix${action.options.mix}_output_source`, source)
 			},
 		},
