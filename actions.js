@@ -272,17 +272,22 @@ export function getActions() {
 					label: 'DataLink Key',
 					type: 'textinput',
 					id: 'datalink_key',
+					useVariables: true,
 					width: 6,
 				},
 				{
 					label: 'DataLink Value',
 					type: 'textinput',
 					id: 'datalink_value',
+					useVariables: true,
 					width: 6,
 				},
 			],
-			callback: (action) => {
-				let cmd = `datalink?key=${action.options.datalink_key}&value=${action.options.datalink_value}`
+			callback: async (action, context) => {
+				const key = await context.parseVariablesInString(action.options.datalink_key)
+				const value = await context.parseVariablesInString(action.options.datalink_value)
+				const cmd = `datalink?key=${key}&value=${value}`
+				console.log(`Sending DataLink command: ${cmd}`)
 				this.sendCommand(null, null, cmd)
 			},
 		},
