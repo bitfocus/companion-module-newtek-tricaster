@@ -464,10 +464,12 @@ export function getActions() {
 					type: 'textinput',
 					id: 'custom',
 					default: 'shortcut?name=main_background_take',
+					useVariables: true,
 				},
 			],
-			callback: (action) => {
-				this.sendCommand(null, null, action.options.custom)
+			callback: async (action, context) => {
+				const command = await context.parseVariablesInString(action.options.custom)
+				this.sendCommand(null, null, command)
 			},
 		},
 		keyDelegate: {
