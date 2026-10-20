@@ -4,6 +4,8 @@ import { getPresets } from './presets.js'
 import { getVariables } from './variables.js'
 import { getFeedbacks } from './feedbacks.js'
 import upgradeScripts from './upgrades.js'
+import { MediaTimer } from './src/media-timer.js'
+import { getMediaVariables, getMediaFeedbacks, getMediaActions, getMediaPresets } from './src/media-definitions.js'
 
 import fetch from 'node-fetch'
 import WebSocket from 'ws'
@@ -13,21 +15,53 @@ const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '',
 class TricasterInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
+		this.lastStatus = {}
+		// Media timer: remaining time etc. of DDR/GFX/Sound, fed by the change_notifications below
+		this.mt = new MediaTimer({
+			log: (level, msg) => this.log(level, msg),
+			onVariables: (vars) => this.setVariableValues(vars),
+			onFeedbacks: (ids) => this.checkFeedbacks(...ids),
+			onChannels: () => {
+				this.initVariables()
+				this.initFeedbacks()
+				this.initActions()
+				this.initPresets()
+			},
+		})
+	}
+
+	/** updateStatus only on change (was called on every HTTP response → log spam at ~9 Hz) */
+	setStatus(status, message = null) {
+		if (this.lastStatus.status === status && this.lastStatus.message === message) return
+		this.lastStatus = { status, message }
+		this.updateStatus(status, message)
 	}
 
 	async init(config) {
 		this.config = config
-		this.updateStatus('connecting')
+		this.setStatus('connecting')
+		clearTimeout(this.retryConnection)
+
+		// Define actions/feedbacks/presets right away, so existing buttons do not fail with
+		// "Unknown action" while the TriCaster is not (yet) reachable
+		this.initStates()
+		this.initVariables()
+		this.initFeedbacks()
+		this.initActions()
+		this.initPresets()
 
 		if (this.config.host) {
 			this.initConnection()
 		} else {
-			this.updateStatus('bad_config', 'Missing IP or hostname')
+			this.setStatus('bad_config', 'Missing IP or hostname')
 			this.log('error', 'Please configure the IP address or hostname of your Tricaster in the module settings')
 		}
 	}
 
 	async destroy() {
+		this.destroyed = true
+		clearTimeout(this.retryConnection)
+		this.mt.stop()
 		if (this.pollDatalink) {
 			clearInterval(this.pollDatalink)
 		}
@@ -61,35 +95,70 @@ class TricasterInstance extends InstanceBase {
 				label: 'DataLink Variables',
 				default: false,
 			},
+			{
+				type: 'checkbox',
+				id: 'media_timer',
+				label: 'Media timer (remaining time of DDR/GFX/Sound)',
+				width: 6,
+				default: true,
+			},
+			{
+				type: 'dropdown',
+				id: 'time_format',
+				label: 'Media timer time format',
+				width: 6,
+				default: 'auto',
+				isVisible: (options) => options.media_timer !== false,
+				choices: [
+					{ id: 'auto', label: 'Auto (m:ss / h:mm:ss)' },
+					{ id: 'hms', label: 'hh:mm:ss' },
+					{ id: 'tc', label: 'hh:mm:ss:ff (timecode)' },
+					{ id: 'sec', label: 'Seconds' },
+				],
+			},
 		]
 	}
 
 	async configUpdated(config) {
 		this.config = config
-		this.updateStatus('connecting')
+		this.setStatus('connecting')
 		clearInterval(this.pollDatalink)
+		this.mt.stop()
 
 		this.init(config)
 	}
 
 	initVariables() {
-		const variables = getVariables.bind(this)()
+		const variables = [...getVariables.bind(this)(), ...getMediaVariables.call(this)]
 		this.setVariableDefinitions(variables)
+		this.mt.lastVars = {} // re-send all media timer values after (re)definition
 	}
 
 	initFeedbacks() {
-		const feedbacks = getFeedbacks.bind(this)()
+		const feedbacks = { ...getFeedbacks.bind(this)(), ...getMediaFeedbacks.call(this) }
 		this.setFeedbackDefinitions(feedbacks)
 	}
 
 	initPresets() {
-		const presets = getPresets.bind(this)()
+		const presets = { ...getPresets.bind(this)(), ...getMediaPresets.call(this) }
 		this.setPresetDefinitions(presets)
 	}
 
 	initActions() {
-		const actions = getActions.bind(this)()
+		const actions = { ...getActions.bind(this)(), ...getMediaActions.call(this) }
 		this.setActionDefinitions(actions)
+	}
+
+	startMediaTimer() {
+		this.mt.stop()
+		if (this.config.media_timer === false) return
+		this.mt.configure({
+			host: this.config.host,
+			external: true,
+			timeFormat: this.config.time_format || 'auto',
+		})
+		this.mt.start()
+		this.mt.pollPlaylist()
 	}
 
 	async initConnection() {
@@ -97,13 +166,17 @@ class TricasterInstance extends InstanceBase {
 		let shortcuts = await this.awaitRequest('dictionary?key=shortcut_states') //This allows older firmware that don't support the version call to still connect
 
 		if (version?.product_information || shortcuts) {
-			this.updateStatus('ok')
+			if (this.connectRetries) this.log('info', 'Tricaster reachable again')
+			this.connectRetries = 0
+			this.setStatus('ok')
 			this.initStates()
 			this.initWebsocket()
 
 			this.initVariables()
 			this.initFeedbacks()
+			this.initActions() // actions before presets – presets reference them
 			this.initPresets()
+			this.startMediaTimer()
 
 			this.processData(version)
 			this.getInputs()
@@ -121,8 +194,14 @@ class TricasterInstance extends InstanceBase {
 				}, 1000)
 			}
 		} else {
-			this.updateStatus('connection_failure')
-			this.log('error', 'Unable to connect to Tricaster. Check your device address in the module settings')
+			this.setStatus('connection_failure')
+			if (!this.connectRetries) {
+				this.log('error', 'Unable to connect to Tricaster. Check your device address in the module settings')
+			}
+			// Retry until the TriCaster is reachable (e.g. Companion started before the TriCaster, or after sleep)
+			this.connectRetries = (this.connectRetries || 0) + 1
+			clearTimeout(this.retryConnection)
+			if (!this.destroyed) this.retryConnection = setTimeout(() => this.initConnection(), 5000)
 		}
 	}
 
@@ -219,6 +298,8 @@ class TricasterInstance extends InstanceBase {
 		let transitions = await this.awaitRequest('dictionary?key=switcher_ui_effects')
 
 		let inputVars = {}
+
+		if (tallyData?.tally) this.updateMediaTally(tallyData.tally)
 
 		if (tallyData && states) {
 			tallyData.tally.column.forEach((input) => {
@@ -396,7 +477,15 @@ class TricasterInstance extends InstanceBase {
 			let msg = isBinary ? data : data.toString()
 
 			if (msg) {
-				this.sendGetRequest(`dictionary?key=${msg}`)
+				const key = msg.trim()
+				if (key === 'ddr_timecode') {
+					// ~9 Hz while playing: handled by the media timer (coalesced, never overlapping)
+					if (this.config.media_timer !== false) this.mt.requestTimecode()
+				} else if (key === 'ddr_playlist') {
+					if (this.config.media_timer !== false && !this.mt._plInFlight) this.mt.pollPlaylist()
+				} else {
+					this.sendGetRequest(`dictionary?key=${key}`)
+				}
 			}
 		})
 
@@ -419,10 +508,10 @@ class TricasterInstance extends InstanceBase {
 		fetch(url)
 			.then((res) => {
 				if (res.status == 200) {
-					this.updateStatus('ok')
+					this.setStatus('ok')
 					return res.text()
 				} else if (res.status == 401) {
-					this.updateStatus('bad_config', 'Authentication Error')
+					this.setStatus('bad_config', 'Authentication Error')
 				}
 			})
 			.then((data) => {
@@ -432,7 +521,7 @@ class TricasterInstance extends InstanceBase {
 			.catch((error) => {
 				let errorText = String(error)
 				if (errorText.match('ETIMEDOUT') || errorText.match('ENOTFOUND') || errorText.match('ECONNREFUSED')) {
-					this.updateStatus('connection_failure')
+					this.setStatus('connection_failure')
 				}
 				this.log('debug', errorText)
 			})
@@ -442,7 +531,8 @@ class TricasterInstance extends InstanceBase {
 		let url = `http://${this.config.host}/v1/${request}`
 
 		try {
-			let result = await fetch(url)
+			// timeout: without it an unreachable host blocks for the OS TCP timeout (~75 s on macOS)
+			let result = await fetch(url, { signal: AbortSignal.timeout(3000) })
 			let data = await result.text()
 			let object = await parser.parse(data)
 			return object
@@ -465,22 +555,31 @@ class TricasterInstance extends InstanceBase {
 		fetch(url)
 			.then((res) => {
 				if (res.status == 200) {
-					this.updateStatus('ok')
+					this.setStatus('ok')
 				} else if (res.status == 401) {
-					this.updateStatus('bad_config', 'Authentication Error')
+					this.setStatus('bad_config', 'Authentication Error')
 				}
 			})
 			.catch((error) => {
 				let errorText = String(error)
 				if (errorText.match('ETIMEDOUT') || errorText.match('ENOTFOUND') || errorText.match('ECONNREFUSED')) {
-					this.updateStatus('connection_failure')
+					this.setStatus('connection_failure')
 				}
 				this.log('debug', errorText)
 			})
 	}
 
 	processData(data) {
+		if (data?.shortcut_state && !data.shortcut_states) {
+			// Reply to dictionary?key=state.<name> (sent after a 'state.<name>' change notification):
+			// a single <shortcut_state/>. Handle it like a one-entry shortcut_states list.
+			data = { shortcut_states: { shortcut_state: [data.shortcut_state] } }
+		}
+		if (data?.shortcut_states?.shortcut_state && !Array.isArray(data.shortcut_states.shortcut_state)) {
+			data.shortcut_states.shortcut_state = [data.shortcut_states.shortcut_state]
+		}
 		if (data.tally) {
+			this.updateMediaTally(data.tally)
 			data.tally.column.forEach((input) => {
 				let inputData = this.inputs.find((x) => x.id == input.index)
 				if (inputData) {
@@ -569,7 +668,9 @@ class TricasterInstance extends InstanceBase {
 			}
 			this.initActions()
 		} else if (data.shortcut_states) {
+			const mediaStates = {}
 			data.shortcut_states?.shortcut_state.forEach((state) => {
+				if (state?.name) mediaStates[state.name] = state.value
 				if (state.name.match(/_short_name/)) {
 					let input = this.inputs.find((x) => x.inputName == state.name.replace('_short_name', ''))
 					if (input) {
@@ -612,6 +713,7 @@ class TricasterInstance extends InstanceBase {
 					this.shortcut_states[`${state.name}`] = selected
 				}
 			})
+			this.mt.mergeShortcutStates(mediaStates)
 		} else if (data.datalink_values) {
 			if (this.datalink.length !== data.datalink_values.data.length) {
 				this.datalink = data.datalink_values.data
@@ -626,6 +728,13 @@ class TricasterInstance extends InstanceBase {
 			this.setVariableValues(updatedVariables)
 		} else {
 		}
+	}
+
+	/** Program tally → media timer ("on air" per media player) */
+	updateMediaTally(tally) {
+		const columns = Array.isArray(tally?.column) ? tally.column : tally?.column ? [tally.column] : []
+		const onPgm = columns.filter((c) => String(c.on_pgm) === 'true').map((c) => c.name)
+		this.mt.setProgramTally(onPgm)
 	}
 
 	checkDelegateStatus(current, v, item) {}
