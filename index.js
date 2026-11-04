@@ -624,11 +624,8 @@ class TricasterInstance extends InstanceBase {
 				updatedVariables[`${name}`] = element.value
 			})
 			this.setVariableValues(updatedVariables)
-		} else {
 		}
 	}
-
-	checkDelegateStatus(current, v, item) {}
 }
 
 runEntrypoint(TricasterInstance, upgradeScripts)
