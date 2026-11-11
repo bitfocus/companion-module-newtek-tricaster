@@ -12,7 +12,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"@companion-module/base": "~1.15.0",
-		"fast-xml-parser": "^5.7.0",
+		"fast-xml-parser": "^5.12.0",
 		"node-fetch": "^3.3.2",
 		"ws": "^8.21.0"
 	},
